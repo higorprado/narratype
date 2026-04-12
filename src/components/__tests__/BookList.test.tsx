@@ -1,10 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import BookList from '../BookList'
+import { ProgressProvider } from '@/context/ProgressContext'
 import type { Book } from '@/types'
 
 function renderWithRouter(ui: React.ReactElement) {
-  return render(<MemoryRouter>{ui}</MemoryRouter>)
+  return render(<MemoryRouter><ProgressProvider>{ui}</ProgressProvider></MemoryRouter>)
 }
 
 const makeBook = (slug: string, chapterCount = 1): Book => ({

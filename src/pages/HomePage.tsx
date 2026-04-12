@@ -8,7 +8,6 @@ export default function HomePage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1>Narratype</h1>
         <p className={styles.hero}>Practice typing by retyping classic literature</p>
       </header>
       <main className={styles.content}>

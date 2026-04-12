@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getBookBySlug, getPage, getPageCount, getChapter } from '@/data'
 import type { TypingStats } from '@/types'
@@ -6,6 +6,7 @@ import { useSettings } from '@/context/SettingsContext'
 import StatsBar from '@/components/StatsBar'
 import TypingArea from '@/components/TypingArea'
 import SettingsModal from '@/components/SettingsModal'
+import { useProgress } from '@/context/ProgressContext'
 import styles from './TypingConsolePage.module.css'
 
 export default function TypingConsolePage() {
@@ -14,6 +15,7 @@ export default function TypingConsolePage() {
   const [stats, setStats] = useState<TypingStats | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { settings } = useSettings()
+  const { markPageComplete, setLastPage } = useProgress()
 
   const chapterIndex = Number(chapterIdx)
   const pageIndex = Number(pageIdx)
@@ -30,6 +32,13 @@ export default function TypingConsolePage() {
   const handleStatsUpdate = useCallback((s: TypingStats) => {
     setStats(s)
   }, [])
+
+  // Track last page on mount
+  useEffect(() => {
+    if (bookSlug) {
+      setLastPage(bookSlug, chapterIndex, pageIndex)
+    }
+  }, [bookSlug, chapterIndex, pageIndex, setLastPage])
 
 
   const goToPage = useCallback(
@@ -107,6 +116,11 @@ export default function TypingConsolePage() {
           cursorStyle={settings.cursorStyle}
           autoScroll={settings.autoScroll}
           onStatsUpdate={handleStatsUpdate}
+          onComplete={() => {
+            if (bookSlug) {
+              markPageComplete(bookSlug, chapterIndex, pageIndex)
+            }
+          }}
         />
       </main>
 

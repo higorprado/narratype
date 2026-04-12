@@ -25,7 +25,9 @@ function loadSettings(): Settings {
   } catch {
     // Corrupted storage — fall back to defaults
   }
-  return DEFAULT_SETTINGS
+  // No stored settings — detect system preference
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  return { ...DEFAULT_SETTINGS, theme: prefersDark ? 'classic-dark' : 'classic-light' }
 }
 
 function settingsReducer(state: Settings, action: SettingsAction): Settings {

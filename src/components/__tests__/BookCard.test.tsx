@@ -2,10 +2,11 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import BookCard from '../BookCard'
+import { ProgressProvider } from '@/context/ProgressContext'
 import type { Book } from '@/types'
 
 function renderWithRouter(ui: React.ReactElement) {
-  return render(<MemoryRouter>{ui}</MemoryRouter>)
+  return render(<MemoryRouter><ProgressProvider>{ui}</ProgressProvider></MemoryRouter>)
 }
 
 const mockBook: Book = {

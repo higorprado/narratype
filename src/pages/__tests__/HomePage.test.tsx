@@ -1,26 +1,20 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import HomePage from '../../pages/HomePage'
+import { ProgressProvider } from '@/context/ProgressContext'
 
 function renderWithRouter(ui: React.ReactElement) {
-  return render(<MemoryRouter>{ui}</MemoryRouter>)
+  return render(<MemoryRouter><ProgressProvider>{ui}</ProgressProvider></MemoryRouter>)
 }
 
 describe('HomePage', () => {
-  it('renders the app header', () => {
-    renderWithRouter(<HomePage />)
-
-    expect(screen.getByText('Narratype')).toBeInTheDocument()
-  })
-
-  it('renders the hero text', () => {
+  it('renders the hero text in the header area', () => {
     renderWithRouter(<HomePage />)
 
     expect(
       screen.getByText('Practice typing by retyping classic literature'),
     ).toBeInTheDocument()
   })
-
   it('renders book cards from data', () => {
     renderWithRouter(<HomePage />)
 

@@ -3,7 +3,7 @@ import HomePage from '@/pages/HomePage'
 import TypingConsolePage from '@/pages/TypingConsolePage'
 import { useParams } from 'react-router-dom'
 import { getBookBySlug } from '@/data'
-
+import { Header } from '@/components/Header'
 function ChaptersPage() {
   const { bookSlug } = useParams()
   const book = getBookBySlug(bookSlug!)
@@ -13,14 +13,17 @@ function ChaptersPage() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/chapters/:bookSlug" element={<ChaptersPage />} />
-      <Route
-        path="/typing-console/:bookSlug/:chapterIndex/:pageIndex"
-        element={<TypingConsolePage />}
-      />
-    </Routes>
+    <>
+      <Header />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/chapters/:bookSlug" element={<ChaptersPage />} />
+        <Route
+          path="/typing-console/:bookSlug/:chapterIndex/:pageIndex"
+          element={<TypingConsolePage />}
+        />
+      </Routes>
+    </>
   )
 }
 
