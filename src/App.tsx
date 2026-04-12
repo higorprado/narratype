@@ -1,15 +1,8 @@
 import { Routes, Route } from 'react-router-dom'
 import HomePage from '@/pages/HomePage'
+import { ChaptersPage } from '@/pages/ChaptersPage'
 import TypingConsolePage from '@/pages/TypingConsolePage'
-import { useParams } from 'react-router-dom'
-import { getBookBySlug } from '@/data'
 import { Header } from '@/components/Header'
-function ChaptersPage() {
-  const { bookSlug } = useParams()
-  const book = getBookBySlug(bookSlug!)
-  if (!book) return <div>Book not found</div>
-  return <div>{book.title}</div>
-}
 
 function App() {
   return (
