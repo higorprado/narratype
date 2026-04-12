@@ -31,8 +31,7 @@ export default function TypingArea({ text, onComplete, onStatsUpdate, options, c
   // Capture keyboard input
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      // Prevent default for keys that would interfere (scroll, tab navigation)
-      if (e.key === ' ' || e.key === 'Backspace' || e.key === 'Enter') {
+      if (e.key === ' ' || e.key === 'Backspace' || e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault()
       }
       handleKeyPress(e.key)

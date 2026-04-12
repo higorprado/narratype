@@ -30,3 +30,14 @@
   min-width: 3ch;
   font-variant-numeric: tabular-nums;
 }
+
+@media (max-width: 767px) {
+  .bar {
+    padding: 0.5rem 1rem;
+    gap: 1rem;
+  }
+
+  .value {
+    font-size: 1.1rem;
+  }
+}

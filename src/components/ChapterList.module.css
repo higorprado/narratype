@@ -19,6 +19,7 @@
   text-decoration: none;
   color: var(--color-text);
   transition: background-color 0.15s, transform 0.1s;
+  min-height: 44px;
 }
 
 .item:hover {
@@ -43,4 +44,20 @@
   font-size: 0.8rem;
   color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .item {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 0.9rem;
+  }
+
+  .number {
+    min-width: 24px;
+    font-size: 0.8rem;
+  }
 }

@@ -1,9 +1,15 @@
 import { render, screen, act } from '@testing-library/react'
+import { vi } from 'vitest'
 import { ProgressProvider, useProgress } from '../ProgressContext'
 
 describe('ProgressContext', () => {
   beforeEach(() => {
     localStorage.clear()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('renders children', () => {
@@ -153,6 +159,7 @@ describe('ProgressContext', () => {
     )
 
     act(() => screen.getByText('markA').click())
+    act(() => { vi.advanceTimersByTime(1) })
     act(() => screen.getByText('markB').click())
 
     // Most recent first

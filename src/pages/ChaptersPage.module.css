@@ -2,6 +2,7 @@
   max-width: 720px;
   margin: 0 auto;
   padding: 32px 16px;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .breadcrumb {
@@ -54,4 +55,25 @@
 
 .backLink:hover {
   text-decoration: underline;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 767px) {
+  .container {
+    padding: 16px 12px;
+  }
+
+  .heading {
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+  }
+
+  .breadcrumb {
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+  }
 }

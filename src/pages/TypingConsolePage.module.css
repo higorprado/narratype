@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .header {
@@ -16,6 +17,7 @@
   gap: 0.5rem;
   font-size: 0.85rem;
   margin-bottom: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .separator {
@@ -51,6 +53,8 @@
   font-size: 0.8rem;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .settingsButton:hover {
@@ -76,6 +80,42 @@
   overflow-y: auto;
 }
 
+.typingWrapper {
+  position: relative;
+  transition: background-color 0.4s ease;
+}
+
+.completed {
+  animation: completionFlash 0.6s ease-out;
+}
+
+.completionOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  animation: completionPop 0.4s ease-out;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.checkmark {
+  font-size: 3rem;
+  color: #4caf50;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+}
+
+.completionText {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4caf50;
+}
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -83,6 +123,8 @@
   padding: 1rem 1.5rem;
   background-color: var(--color-surface);
   border-top: 1px solid var(--color-primary);
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .navButtons {
@@ -99,6 +141,8 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .button:hover:not(:disabled) {
@@ -124,4 +168,73 @@
 .error p {
   color: var(--color-text-muted);
   margin-bottom: 1.5rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes completionFlash {
+  0% { background-color: transparent; }
+  30% { background-color: rgba(76, 175, 80, 0.08); }
+  100% { background-color: transparent; }
+}
+
+@keyframes completionPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (max-width: 767px) {
+  .header {
+    padding: 0.75rem 1rem 0.5rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.75rem;
+  }
+
+  .chapterTitle {
+    font-size: 0.95rem;
+  }
+
+  .footer {
+    padding: 0.75rem 1rem;
+    justify-content: center;
+  }
+
+  .navButtons {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .navButtons .button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 479px) {
+  .breadcrumb {
+    font-size: 0.7rem;
+  }
+
+  .headerActions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .settingsButton {
+    align-self: flex-end;
+  }
 }

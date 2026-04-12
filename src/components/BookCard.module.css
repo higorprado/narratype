@@ -59,3 +59,18 @@
   margin-top: 0.25rem;
   display: block;
 }
+
+@media (max-width: 767px) {
+  .card {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .author {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+}

@@ -1,11 +1,13 @@
 import { Link, useParams } from 'react-router-dom'
 import { getBookBySlug } from '@/data'
 import { ChapterList } from '@/components/ChapterList'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import styles from './ChaptersPage.module.css'
 
 export function ChaptersPage() {
   const { bookSlug } = useParams<{ bookSlug: string }>()
   const book = bookSlug ? getBookBySlug(bookSlug) : undefined
+  useDocumentTitle(book ? `${book.title} - Narratype` : 'Narratype')
 
   if (!book) {
     return (

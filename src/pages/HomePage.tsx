@@ -1,9 +1,11 @@
 import { getAllBooks } from '@/data'
 import BookList from '@/components/BookList'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
   const books = getAllBooks()
+  useDocumentTitle('Narratype - Practice Typing with Classic Literature')
 
   return (
     <div className={styles.page}>

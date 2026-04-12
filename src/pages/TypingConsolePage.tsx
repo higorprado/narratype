@@ -7,6 +7,7 @@ import StatsBar from '@/components/StatsBar'
 import TypingArea from '@/components/TypingArea'
 import SettingsModal from '@/components/SettingsModal'
 import { useProgress } from '@/context/ProgressContext'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import styles from './TypingConsolePage.module.css'
 
 export default function TypingConsolePage() {
@@ -14,6 +15,7 @@ export default function TypingConsolePage() {
   const navigate = useNavigate()
   const [stats, setStats] = useState<TypingStats | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [isCompleted, setIsCompleted] = useState(false)
   const { settings } = useSettings()
   const { markPageComplete, setLastPage } = useProgress()
 
@@ -29,6 +31,12 @@ export default function TypingConsolePage() {
   const wpm = stats?.wpm ?? 0
   const accuracy = stats?.accuracy ?? 0
 
+  // Dynamic page title
+  const pageTitle = book && chapter
+    ? `${chapter.title} — Page ${pageIndex + 1}/${totalPages} | Narratype`
+    : 'Narratype'
+  useDocumentTitle(pageTitle)
+
   const handleStatsUpdate = useCallback((s: TypingStats) => {
     setStats(s)
   }, [])
@@ -40,10 +48,23 @@ export default function TypingConsolePage() {
     }
   }, [bookSlug, chapterIndex, pageIndex, setLastPage])
 
+  // Escape: navigate back to chapters (only when settings modal is closed)
+  useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !settingsOpen) {
+        if (bookSlug) {
+          navigate(`/chapters/${bookSlug}`)
+        }
+      }
+    }
+    document.addEventListener('keydown', handleGlobalKeyDown)
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [bookSlug, navigate, settingsOpen])
 
   const goToPage = useCallback(
     (newPageIdx: number) => {
       if (!bookSlug) return
+      setIsCompleted(false)
       navigate(`/typing-console/${bookSlug}/${chapterIndex}/${newPageIdx}`)
     },
     [navigate, bookSlug, chapterIndex],
@@ -104,24 +125,33 @@ export default function TypingConsolePage() {
       <StatsBar wpm={wpm} accuracy={accuracy} isStarted={isStarted} />
 
       <main className={styles.main}>
-        <TypingArea
-          key={`${bookSlug}-${chapterIndex}-${pageIndex}`}
-          text={page.text}
-          options={{
-            stopCursorAfterMistype: settings.stopCursorAfterMistype,
-            ignoreCapitalization: settings.ignoreCapitalization,
-            skipPunctuation: settings.skipPunctuation,
-            internationalMode: settings.internationalMode,
-          }}
-          cursorStyle={settings.cursorStyle}
-          autoScroll={settings.autoScroll}
-          onStatsUpdate={handleStatsUpdate}
-          onComplete={() => {
-            if (bookSlug) {
-              markPageComplete(bookSlug, chapterIndex, pageIndex)
-            }
-          }}
-        />
+        <div className={`${styles.typingWrapper} ${isCompleted ? styles.completed : ''}`}>
+          <TypingArea
+            key={`${bookSlug}-${chapterIndex}-${pageIndex}`}
+            text={page.text}
+            options={{
+              stopCursorAfterMistype: settings.stopCursorAfterMistype,
+              ignoreCapitalization: settings.ignoreCapitalization,
+              skipPunctuation: settings.skipPunctuation,
+              internationalMode: settings.internationalMode,
+            }}
+            cursorStyle={settings.cursorStyle}
+            autoScroll={settings.autoScroll}
+            onStatsUpdate={handleStatsUpdate}
+            onComplete={() => {
+              if (bookSlug) {
+                markPageComplete(bookSlug, chapterIndex, pageIndex)
+              }
+              setIsCompleted(true)
+            }}
+          />
+          {isCompleted && (
+            <div className={styles.completionOverlay} aria-live="polite">
+              <span className={styles.checkmark}>&#10003;</span>
+              <span className={styles.completionText}>Page complete!</span>
+            </div>
+          )}
+        </div>
       </main>
 
       <footer className={styles.footer}>
@@ -129,7 +159,7 @@ export default function TypingConsolePage() {
           className={styles.button}
           onClick={() => {
             setStats(null)
-            // Re-mount TypingArea via key is already handled; force with navigate
+            setIsCompleted(false)
             navigate(`/typing-console/${bookSlug}/${chapterIndex}/${pageIndex}`)
           }}
         >
