@@ -1,0 +1,34 @@
+.card {
+  display: block;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-color: var(--color-accent);
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.author {
+  color: var(--color-text-muted);
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.chapters {
+  color: var(--color-accent);
+  font-size: 0.85rem;
+  margin: 0;
+}

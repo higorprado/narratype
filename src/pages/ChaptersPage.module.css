@@ -1,0 +1,57 @@
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.breadcrumbLink {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.breadcrumbLink:hover {
+  text-decoration: underline;
+}
+
+.separator {
+  color: var(--color-text-muted);
+}
+
+.heading {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 24px;
+  color: var(--color-text);
+}
+
+.notFound {
+  text-align: center;
+  padding: 64px 16px;
+}
+
+.notFoundTitle {
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  color: var(--color-text);
+}
+
+.backLink {
+  display: inline-block;
+  margin-top: 32px;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
