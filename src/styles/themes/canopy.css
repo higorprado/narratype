@@ -1,0 +1,12 @@
+[data-theme='canopy'] {
+  --color-bg: #0d1f0d;
+  --color-surface: #132813;
+  --color-text: #d4e8d4;
+  --color-text-muted: #8ab88a;
+  --color-primary: #1e3a1e;
+  --color-accent: #4caf50;
+  --color-correct: #66bb6a;
+  --color-incorrect: #ef5350;
+  --color-cursor: #4caf50;
+  --color-untyped: #2e5a2e;
+}

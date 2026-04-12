@@ -1,0 +1,12 @@
+[data-theme='surf'] {
+  --color-bg: #0a2a3a;
+  --color-surface: #0e3347;
+  --color-text: #d4f0f0;
+  --color-text-muted: #80b8c0;
+  --color-primary: #1a4050;
+  --color-accent: #20b2aa;
+  --color-correct: #4caf50;
+  --color-incorrect: #ff5252;
+  --color-cursor: #20b2aa;
+  --color-untyped: #2a5a6a;
+}

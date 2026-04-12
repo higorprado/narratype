@@ -1,0 +1,12 @@
+[data-theme='cinder'] {
+  --color-bg: #1a1a1a;
+  --color-surface: #252525;
+  --color-text: #e0e0e0;
+  --color-text-muted: #909090;
+  --color-primary: #383838;
+  --color-accent: #ff6600;
+  --color-correct: #66bb6a;
+  --color-incorrect: #ef5350;
+  --color-cursor: #ff6600;
+  --color-untyped: #505050;
+}

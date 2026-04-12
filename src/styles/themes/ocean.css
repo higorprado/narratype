@@ -1,0 +1,12 @@
+[data-theme='ocean'] {
+  --color-bg: #0a192f;
+  --color-surface: #112240;
+  --color-text: #ccd6f6;
+  --color-text-muted: #8892b0;
+  --color-primary: #1d3461;
+  --color-accent: #64ffda;
+  --color-correct: #64ffda;
+  --color-incorrect: #ff6b6b;
+  --color-cursor: #64ffda;
+  --color-untyped: #3a5070;
+}

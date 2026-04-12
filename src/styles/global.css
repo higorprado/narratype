@@ -1,15 +1,4 @@
 :root {
-  --color-bg: #1a1a2e;
-  --color-surface: #16213e;
-  --color-text: #e0e0e0;
-  --color-text-muted: #a0a0a0;
-  --color-primary: #0f3460;
-  --color-accent: #e94560;
-  --color-correct: #4caf50;
-  --color-incorrect: #f44336;
-  --color-cursor: #e94560;
-  --color-untyped: #555;
-  --font-family: 'Literata', Georgia, serif;
   --font-size-base: 18px;
 }
 

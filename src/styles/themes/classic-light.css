@@ -1,0 +1,12 @@
+[data-theme='classic-light'] {
+  --color-bg: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-text: #333333;
+  --color-text-muted: #666666;
+  --color-primary: #cccccc;
+  --color-accent: #0066cc;
+  --color-correct: #2e7d32;
+  --color-incorrect: #c62828;
+  --color-cursor: #0066cc;
+  --color-untyped: #aaa;
+}

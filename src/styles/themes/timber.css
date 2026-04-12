@@ -1,0 +1,12 @@
+[data-theme='timber'] {
+  --color-bg: #2c1810;
+  --color-surface: #3e2218;
+  --color-text: #e8d5c0;
+  --color-text-muted: #b89878;
+  --color-primary: #5a3a28;
+  --color-accent: #d4a574;
+  --color-correct: #7cb342;
+  --color-incorrect: #e57373;
+  --color-cursor: #d4a574;
+  --color-untyped: #6d4c3a;
+}

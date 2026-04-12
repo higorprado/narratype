@@ -197,6 +197,20 @@
   border-color: var(--color-text-muted);
 }
 
+.themePreview {
+  height: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.themeLabel {
+  font-size: 0.75rem;
+}
 .themeSwatchActive {
   border-color: var(--color-accent);
 }

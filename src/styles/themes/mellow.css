@@ -1,0 +1,12 @@
+[data-theme='mellow'] {
+  --color-bg: #2d2a26;
+  --color-surface: #383530;
+  --color-text: #e8e0d4;
+  --color-text-muted: #a8a090;
+  --color-primary: #4a463e;
+  --color-accent: #c9a96e;
+  --color-correct: #7cb342;
+  --color-incorrect: #e57373;
+  --color-cursor: #c9a96e;
+  --color-untyped: #5a5550;
+}

@@ -1,0 +1,12 @@
+[data-theme='bumblebee'] {
+  --color-bg: #1a1a2e;
+  --color-surface: #1e1e3a;
+  --color-text: #f0f0f0;
+  --color-text-muted: #a0a0b8;
+  --color-primary: #2a2a4e;
+  --color-accent: #ffd700;
+  --color-correct: #66bb6a;
+  --color-incorrect: #ff5252;
+  --color-cursor: #ffd700;
+  --color-untyped: #4a4a6a;
+}

@@ -1,0 +1,12 @@
+[data-theme='bubblegum'] {
+  --color-bg: #2d1b37;
+  --color-surface: #3d2747;
+  --color-text: #f0e0f0;
+  --color-text-muted: #c0a0c0;
+  --color-primary: #4a2d57;
+  --color-accent: #ff6b9d;
+  --color-correct: #81c784;
+  --color-incorrect: #ff5252;
+  --color-cursor: #ff6b9d;
+  --color-untyped: #6a4570;
+}

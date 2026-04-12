@@ -1,0 +1,12 @@
+[data-theme='terracotta'] {
+  --color-bg: #2c1810;
+  --color-surface: #3a2218;
+  --color-text: #e8d5c4;
+  --color-text-muted: #b89878;
+  --color-primary: #5a3828;
+  --color-accent: #c75b39;
+  --color-correct: #7cb342;
+  --color-incorrect: #e57373;
+  --color-cursor: #c75b39;
+  --color-untyped: #6d4c3a;
+}

@@ -1,0 +1,12 @@
+[data-theme='pulse'] {
+  --color-bg: #1a0a2e;
+  --color-surface: #22123e;
+  --color-text: #e0d0f0;
+  --color-text-muted: #a080c0;
+  --color-primary: #3a1a5a;
+  --color-accent: #9b59b6;
+  --color-correct: #66bb6a;
+  --color-incorrect: #ff5252;
+  --color-cursor: #9b59b6;
+  --color-untyped: #4a2a6a;
+}

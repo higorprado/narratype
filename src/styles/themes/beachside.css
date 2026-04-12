@@ -1,0 +1,12 @@
+[data-theme='beachside'] {
+  --color-bg: #2b2520;
+  --color-surface: #363028;
+  --color-text: #e8ddd0;
+  --color-text-muted: #a89880;
+  --color-primary: #4a4035;
+  --color-accent: #e8a87c;
+  --color-correct: #7cb342;
+  --color-incorrect: #e57373;
+  --color-cursor: #e8a87c;
+  --color-untyped: #5a5045;
+}

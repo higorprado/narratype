@@ -1,0 +1,12 @@
+[data-theme='lagoon'] {
+  --color-bg: #0d2137;
+  --color-surface: #122d47;
+  --color-text: #d4e8f6;
+  --color-text-muted: #88b0d0;
+  --color-primary: #1a3a57;
+  --color-accent: #00bcd4;
+  --color-correct: #4caf50;
+  --color-incorrect: #ff5252;
+  --color-cursor: #00bcd4;
+  --color-untyped: #2a5070;
+}

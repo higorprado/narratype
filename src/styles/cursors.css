@@ -1,44 +1,19 @@
-.char {
-  position: relative;
-  font-size: 1.15rem;
-  line-height: 1.8;
-  letter-spacing: 0.02em;
-}
-
-.untyped {
-  color: var(--color-untyped);
-}
-
-.correct {
-  color: var(--color-text);
-}
-
-.incorrect {
-  color: var(--color-incorrect);
-  text-decoration: underline;
-  text-decoration-style: wavy;
-  text-underline-offset: 3px;
-}
-
-/* Default cursor (BOX) */
-.cursor {
+/* Cursor style classes — applied to the current cursor character */
+.cursor-box {
   outline: 2px solid var(--color-cursor);
   outline-offset: 1px;
   border-radius: 2px;
 }
 
 .cursor-line {
-  outline: none;
   border-left: 2px solid var(--color-cursor);
 }
 
 .cursor-under {
-  outline: none;
   border-bottom: 2px solid var(--color-cursor);
 }
 
 .cursor-dot {
-  outline: none;
   position: relative;
 }
 
@@ -53,7 +28,6 @@
 }
 
 .cursor-high {
-  outline: none;
   background-color: color-mix(in srgb, var(--color-cursor) 30%, transparent);
   border-radius: 2px;
 }
@@ -65,12 +39,10 @@
 }
 
 .cursor-h-under {
-  outline: none;
   border-bottom: 4px solid var(--color-cursor);
 }
 
 .cursor-h-dot {
-  outline: none;
   position: relative;
 }
 
@@ -85,11 +57,5 @@
 }
 
 .cursor-none {
-  outline: none;
-}
-
-.special {
-  opacity: 0.4;
-  font-size: 0.9em;
-  user-select: none;
+  /* No cursor visible */
 }

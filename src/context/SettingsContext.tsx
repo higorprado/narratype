@@ -1,3 +1,6 @@
+import { useTheme } from '@/hooks/useTheme'
+import { useFont } from '@/hooks/useFont'
+
 import { createContext, useContext, useReducer, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import type { Settings } from '@/types'
@@ -40,6 +43,9 @@ const SettingsContext = createContext<SettingsContextValue | null>(null)
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, dispatch] = useReducer(settingsReducer, null, loadSettings)
+
+  useTheme(settings.theme)
+  useFont(settings.font)
 
   useEffect(() => {
     try {

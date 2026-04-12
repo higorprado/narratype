@@ -1,0 +1,12 @@
+[data-theme='platoon'] {
+  --color-bg: #1a2614;
+  --color-surface: #223018;
+  --color-text: #d4dcc8;
+  --color-text-muted: #8a9a78;
+  --color-primary: #2e3e22;
+  --color-accent: #8b9a6b;
+  --color-correct: #66bb6a;
+  --color-incorrect: #ef5350;
+  --color-cursor: #8b9a6b;
+  --color-untyped: #4a5a3a;
+}

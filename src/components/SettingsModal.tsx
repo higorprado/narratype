@@ -20,7 +20,38 @@ const THEMES: ThemeName[] = [
 ]
 const FONTS: FontName[] = ['literata', 'hyperlegible', 'open-dyslexic', 'fira-code', 'courier-prime', 'lora', 'bitter', 'comic-sans']
 
+const THEME_COLORS: Record<ThemeName, { bg: string; accent: string; text: string }> = {
+  'classic-dark': { bg: '#1a1a2e', accent: '#e94560', text: '#e0e0e0' },
+  'classic-light': { bg: '#ffffff', accent: '#0066cc', text: '#333333' },
+  'timber': { bg: '#2c1810', accent: '#d4a574', text: '#e8d5c0' },
+  'ocean': { bg: '#0a192f', accent: '#64ffda', text: '#ccd6f6' },
+  'bubblegum': { bg: '#2d1b37', accent: '#ff6b9d', text: '#f0e0f0' },
+  'newsprint': { bg: '#f5f0e8', accent: '#8b0000', text: '#333333' },
+  'cinder': { bg: '#1a1a1a', accent: '#ff6600', text: '#e0e0e0' },
+  'bumblebee': { bg: '#1a1a2e', accent: '#ffd700', text: '#f0f0f0' },
+  'terracotta': { bg: '#2c1810', accent: '#c75b39', text: '#e8d5c4' },
+  'canopy': { bg: '#0d1f0d', accent: '#4caf50', text: '#d4e8d4' },
+  'lagoon': { bg: '#0d2137', accent: '#00bcd4', text: '#d4e8f6' },
+  'mellow': { bg: '#2d2a26', accent: '#c9a96e', text: '#e8e0d4' },
+  'surf': { bg: '#0a2a3a', accent: '#20b2aa', text: '#d4f0f0' },
+  'platoon': { bg: '#1a2614', accent: '#8b9a6b', text: '#d4dcc8' },
+  'beachside': { bg: '#2b2520', accent: '#e8a87c', text: '#e8ddd0' },
+  'pulse': { bg: '#1a0a2e', accent: '#9b59b6', text: '#e0d0f0' },
+}
+
+
 const FONT_SAMPLE = 'The quick brown fox jumps over the lazy dog.'
+
+const FONT_FAMILIES: Record<FontName, string> = {
+  literata: '"Literata", Georgia, serif',
+  hyperlegible: '"Atkinson Hyperlegible", sans-serif',
+  'open-dyslexic': '"OpenDyslexic", sans-serif',
+  'fira-code': '"Fira Code", monospace',
+  'courier-prime': '"Courier Prime", monospace',
+  lora: '"Lora", Georgia, serif',
+  bitter: '"Bitter", serif',
+  'comic-sans': '"Comic Sans MS", cursive',
+}
 
 const BOOLEAN_KEYS: { key: keyof Settings; label: string }[] = [
   { key: 'smoothCursor', label: 'Smooth Cursor' },
@@ -122,15 +153,24 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   function renderThemes() {
     return (
       <div className={styles.themeGrid}>
-        {THEMES.map((theme) => (
-          <button
-            key={theme}
-            className={`${styles.themeSwatch} ${settings.theme === theme ? styles.themeSwatchActive : ''}`}
-            onClick={() => updateSetting('theme', theme)}
-          >
-            {theme}
-          </button>
-        ))}
+        {THEMES.map((theme) => {
+          const colors = THEME_COLORS[theme]
+          return (
+            <button
+              key={theme}
+              className={`${styles.themeSwatch} ${settings.theme === theme ? styles.themeSwatchActive : ''}`}
+              onClick={() => updateSetting('theme', theme)}
+            >
+              <div
+                className={styles.themePreview}
+                style={{ backgroundColor: colors.bg, color: colors.text }}
+              >
+                <span style={{ color: colors.accent }}>Aa</span>
+              </div>
+              <span className={styles.themeLabel}>{theme}</span>
+            </button>
+          )
+        })}
       </div>
     )
   }
@@ -145,7 +185,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             onClick={() => updateSetting('font', font)}
           >
             <div className={styles.fontName}>{font}</div>
-            <div className={styles.fontSample}>{FONT_SAMPLE}</div>
+            <div className={styles.fontSample} style={{ fontFamily: FONT_FAMILIES[font] }}>{FONT_SAMPLE}</div>
           </button>
         ))}
       </div>
