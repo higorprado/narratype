@@ -2,14 +2,18 @@ import { useState, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getBookBySlug, getPage, getPageCount, getChapter } from '@/data'
 import type { TypingStats } from '@/types'
+import { useSettings } from '@/context/SettingsContext'
 import StatsBar from '@/components/StatsBar'
 import TypingArea from '@/components/TypingArea'
+import SettingsModal from '@/components/SettingsModal'
 import styles from './TypingConsolePage.module.css'
 
 export default function TypingConsolePage() {
   const { bookSlug, chapterIndex: chapterIdx, pageIndex: pageIdx } = useParams()
   const navigate = useNavigate()
   const [stats, setStats] = useState<TypingStats | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const { settings } = useSettings()
 
   const chapterIndex = Number(chapterIdx)
   const pageIndex = Number(pageIdx)
@@ -74,9 +78,17 @@ export default function TypingConsolePage() {
           <span className={styles.separator}>&gt;</span>
           <span className={styles.current}>{chapter.title}</span>
         </nav>
-        {chapter.title && (
-          <h2 className={styles.chapterTitle}>{chapter.title}</h2>
-        )}
+        <div className={styles.headerActions}>
+          {chapter.title && (
+            <h2 className={styles.chapterTitle}>{chapter.title}</h2>
+          )}
+          <button
+            className={styles.settingsButton}
+            onClick={() => setSettingsOpen(true)}
+          >
+            Settings
+          </button>
+        </div>
         <p className={styles.pageInfo}>Page {pageIndex + 1} / {totalPages}</p>
       </header>
 
@@ -86,6 +98,14 @@ export default function TypingConsolePage() {
         <TypingArea
           key={`${bookSlug}-${chapterIndex}-${pageIndex}`}
           text={page.text}
+          options={{
+            stopCursorAfterMistype: settings.stopCursorAfterMistype,
+            ignoreCapitalization: settings.ignoreCapitalization,
+            skipPunctuation: settings.skipPunctuation,
+            internationalMode: settings.internationalMode,
+          }}
+          cursorStyle={settings.cursorStyle}
+          autoScroll={settings.autoScroll}
           onStatsUpdate={handleStatsUpdate}
         />
       </main>
@@ -118,6 +138,8 @@ export default function TypingConsolePage() {
           </button>
         </div>
       </footer>
+
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }

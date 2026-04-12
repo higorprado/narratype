@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react'
 import { useTypingEngine } from '@/hooks/useTypingEngine'
-import type { TypingStats } from '@/types'
+import type { TypingEngineOptions } from '@/hooks/useTypingEngine'
+import type { TypingStats, CursorStyle } from '@/types'
 import CharSpan from './CharSpan'
 import styles from './TypingArea.module.css'
 
@@ -8,9 +9,12 @@ interface TypingAreaProps {
   text: string
   onComplete?: () => void
   onStatsUpdate?: (stats: TypingStats) => void
+  options?: TypingEngineOptions
+  cursorStyle?: CursorStyle
+  autoScroll?: boolean
 }
 
-export default function TypingArea({ text, onComplete, onStatsUpdate }: TypingAreaProps) {
+export default function TypingArea({ text, onComplete, onStatsUpdate, options, cursorStyle, autoScroll = true }: TypingAreaProps) {
   const {
     chars,
     cursorPosition,
@@ -18,7 +22,7 @@ export default function TypingArea({ text, onComplete, onStatsUpdate }: TypingAr
     startTime,
     handleKeyPress,
     getStats,
-  } = useTypingEngine(text)
+  } = useTypingEngine(text, options)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLSpanElement>(null)
@@ -45,10 +49,10 @@ export default function TypingArea({ text, onComplete, onStatsUpdate }: TypingAr
 
   // Auto-scroll to keep cursor visible
   useEffect(() => {
-    if (cursorRef.current) {
+    if (autoScroll && cursorRef.current) {
       cursorRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
     }
-  }, [cursorPosition])
+  }, [cursorPosition, autoScroll])
 
   // Report stats on meaningful changes
   useEffect(() => {
@@ -96,6 +100,7 @@ export default function TypingArea({ text, onComplete, onStatsUpdate }: TypingAr
                   char={item.char}
                   state={item.state}
                   isCursor={true}
+                  cursorStyle={cursorStyle}
                 />
               ) : (
                 <CharSpan

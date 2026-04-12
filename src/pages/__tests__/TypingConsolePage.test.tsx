@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { SettingsProvider } from '@/context/SettingsContext'
 import TypingConsolePage from '../../pages/TypingConsolePage'
 
 // jsdom does not implement scrollIntoView
@@ -9,14 +10,16 @@ beforeAll(() => {
 
 function renderWithRoute(path: string) {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route
-          path="/typing-console/:bookSlug/:chapterIndex/:pageIndex"
-          element={<TypingConsolePage />}
-        />
-      </Routes>
-    </MemoryRouter>,
+    <SettingsProvider>
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route
+            path="/typing-console/:bookSlug/:chapterIndex/:pageIndex"
+            element={<TypingConsolePage />}
+          />
+        </Routes>
+      </MemoryRouter>
+    </SettingsProvider>,
   )
 }
 
