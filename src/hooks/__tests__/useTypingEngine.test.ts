@@ -1,0 +1,293 @@
+import { describe, it, expect } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import { useTypingEngine } from '../useTypingEngine'
+import { CharState } from '@/types'
+
+describe('useTypingEngine', () => {
+  const simpleText = 'Hello world'
+
+  it('should initialize with all chars UNTYPED and cursor at 0', () => {
+    const { result } = renderHook(() => useTypingEngine(simpleText))
+    const { chars, cursorPosition, isComplete } = result.current
+
+    expect(cursorPosition).toBe(0)
+    expect(isComplete).toBe(false)
+    expect(chars).toHaveLength(simpleText.length)
+    for (const c of chars) {
+      expect(c.state).toBe(CharState.UNTYPED)
+    }
+  })
+
+  it('should mark correct character and advance cursor', () => {
+    const { result } = renderHook(() => useTypingEngine(simpleText))
+
+    act(() => {
+      result.current.handleKeyPress('H')
+    })
+
+    expect(result.current.chars[0].state).toBe(CharState.CORRECT)
+    expect(result.current.cursorPosition).toBe(1)
+  })
+
+  it('should mark incorrect character and advance cursor', () => {
+    const { result } = renderHook(() => useTypingEngine(simpleText))
+
+    act(() => {
+      result.current.handleKeyPress('X')
+    })
+
+    expect(result.current.chars[0].state).toBe(CharState.INCORRECT)
+    expect(result.current.cursorPosition).toBe(1)
+  })
+
+  it('should handle backspace: return char to UNTYPED and move cursor back', () => {
+    const { result } = renderHook(() => useTypingEngine(simpleText))
+
+    act(() => {
+      result.current.handleKeyPress('H')
+      result.current.handleKeyPress('e')
+    })
+
+    expect(result.current.cursorPosition).toBe(2)
+
+    act(() => {
+      result.current.handleKeyPress('Backspace')
+    })
+
+    expect(result.current.cursorPosition).toBe(1)
+    expect(result.current.chars[1].state).toBe(CharState.UNTYPED)
+  })
+
+  it('should not go below cursor position 0 on backspace', () => {
+    const { result } = renderHook(() => useTypingEngine(simpleText))
+
+    act(() => {
+      result.current.handleKeyPress('Backspace')
+    })
+
+    expect(result.current.cursorPosition).toBe(0)
+  })
+
+  it('should signal page complete when all chars typed', () => {
+    const shortText = 'Hi'
+    const { result } = renderHook(() => useTypingEngine(shortText))
+
+    act(() => {
+      result.current.handleKeyPress('H')
+      result.current.handleKeyPress('i')
+    })
+
+    expect(result.current.isComplete).toBe(true)
+    expect(result.current.cursorPosition).toBe(2)
+  })
+
+  it('should not advance past the end after completion', () => {
+    const shortText = 'Hi'
+    const { result } = renderHook(() => useTypingEngine(shortText))
+
+    act(() => {
+      result.current.handleKeyPress('H')
+      result.current.handleKeyPress('i')
+      result.current.handleKeyPress('x')
+    })
+
+    expect(result.current.cursorPosition).toBe(2)
+    expect(result.current.isComplete).toBe(true)
+  })
+
+  it('should handle space character', () => {
+    const { result } = renderHook(() => useTypingEngine(simpleText))
+
+    act(() => {
+      result.current.handleKeyPress('H')
+      result.current.handleKeyPress('e')
+      result.current.handleKeyPress('l')
+      result.current.handleKeyPress('l')
+      result.current.handleKeyPress('o')
+      result.current.handleKeyPress(' ')
+    })
+
+    expect(result.current.chars[5].state).toBe(CharState.CORRECT)
+    expect(result.current.cursorPosition).toBe(6)
+  })
+
+  it('should handle newline character in text', () => {
+    const textWithNewline = 'ab\ncd'
+    const { result } = renderHook(() => useTypingEngine(textWithNewline))
+
+    act(() => {
+      result.current.handleKeyPress('a')
+      result.current.handleKeyPress('b')
+      result.current.handleKeyPress('Enter')
+    })
+
+    expect(result.current.chars[2].state).toBe(CharState.CORRECT)
+    expect(result.current.cursorPosition).toBe(3)
+  })
+
+  it('should calculate WPM correctly after typing', () => {
+    const { result } = renderHook(() => useTypingEngine('Hello'))
+
+    act(() => {
+      result.current.handleKeyPress('H')
+      result.current.handleKeyPress('e')
+      result.current.handleKeyPress('l')
+      result.current.handleKeyPress('l')
+      result.current.handleKeyPress('o')
+    })
+
+    const stats = result.current.getStats()
+    // 5 correct chars, some elapsed time
+    expect(stats.correctChars).toBe(5)
+    expect(stats.totalTypedChars).toBe(5)
+    expect(stats.accuracy).toBe(100)
+  })
+
+  it('should calculate accuracy with mistakes', () => {
+    const { result } = renderHook(() => useTypingEngine('Hi'))
+
+    act(() => {
+      result.current.handleKeyPress('H')
+      result.current.handleKeyPress('X') // wrong
+    })
+
+    const stats = result.current.getStats()
+    expect(stats.correctChars).toBe(1)
+    expect(stats.totalTypedChars).toBe(2)
+    expect(stats.accuracy).toBe(50)
+  })
+
+  it('should reset to initial state', () => {
+    const { result } = renderHook(() => useTypingEngine(simpleText))
+
+    act(() => {
+      result.current.handleKeyPress('H')
+      result.current.handleKeyPress('e')
+    })
+
+    expect(result.current.cursorPosition).toBe(2)
+
+    act(() => {
+      result.current.reset()
+    })
+
+    expect(result.current.cursorPosition).toBe(0)
+    expect(result.current.isComplete).toBe(false)
+    for (const c of result.current.chars) {
+      expect(c.state).toBe(CharState.UNTYPED)
+    }
+  })
+
+  it('should track start time on first keypress', () => {
+    const { result } = renderHook(() => useTypingEngine(simpleText))
+
+    expect(result.current.startTime).toBeNull()
+
+    act(() => {
+      result.current.handleKeyPress('H')
+    })
+
+    expect(result.current.startTime).not.toBeNull()
+  })
+
+  it('should handle stopCursorAfterMistype option', () => {
+    const { result } = renderHook(() =>
+      useTypingEngine(simpleText, { stopCursorAfterMistype: true }),
+    )
+
+    act(() => {
+      result.current.handleKeyPress('X') // wrong
+    })
+
+    // Cursor should NOT advance after mistype
+    expect(result.current.cursorPosition).toBe(0)
+    expect(result.current.chars[0].state).toBe(CharState.INCORRECT)
+  })
+
+  it('should allow backspace from mistype when stopCursorAfterMistype is on', () => {
+    const { result } = renderHook(() =>
+      useTypingEngine(simpleText, { stopCursorAfterMistype: true }),
+    )
+
+    act(() => {
+      result.current.handleKeyPress('X') // wrong, cursor stays
+      result.current.handleKeyPress('Backspace')
+    })
+
+    expect(result.current.cursorPosition).toBe(0)
+    expect(result.current.chars[0].state).toBe(CharState.UNTYPED)
+  })
+
+  it('should handle ignoreCapitalization option', () => {
+    const { result } = renderHook(() =>
+      useTypingEngine('Hello', { ignoreCapitalization: true }),
+    )
+
+    act(() => {
+      result.current.handleKeyPress('h') // lowercase h matches H
+    })
+
+    expect(result.current.chars[0].state).toBe(CharState.CORRECT)
+  })
+
+  it('should ignore modifier keys and non-character keys', () => {
+    const { result } = renderHook(() => useTypingEngine(simpleText))
+
+    act(() => {
+      result.current.handleKeyPress('Shift')
+      result.current.handleKeyPress('Control')
+      result.current.handleKeyPress('Alt')
+      result.current.handleKeyPress('Meta')
+      result.current.handleKeyPress('Tab')
+      result.current.handleKeyPress('CapsLock')
+    })
+
+    expect(result.current.cursorPosition).toBe(0)
+  })
+
+  it('should handle empty text gracefully', () => {
+    const { result } = renderHook(() => useTypingEngine(''))
+
+    expect(result.current.chars).toHaveLength(0)
+    expect(result.current.cursorPosition).toBe(0)
+    expect(result.current.isComplete).toBe(true) // nothing to type = complete
+  })
+
+  describe('skipPunctuation option', () => {
+    it('should auto-advance past punctuation chars', () => {
+      const { result } = renderHook(() =>
+        useTypingEngine('a.b', { skipPunctuation: true }),
+      )
+
+      act(() => {
+        result.current.handleKeyPress('a')
+      })
+
+      // After typing 'a', the '.' should be auto-skipped, cursor at 'b'
+      expect(result.current.chars[0].state).toBe(CharState.CORRECT)
+      expect(result.current.chars[1].state).toBe(CharState.CORRECT) // auto-corrected
+      expect(result.current.cursorPosition).toBe(2) // at 'b'
+    })
+  })
+
+  describe('internationalMode option', () => {
+    it('should treat double dash as em-dash', () => {
+      const text = 'word\u2014word'
+      const { result } = renderHook(() =>
+        useTypingEngine(text, { internationalMode: true }),
+      )
+
+      act(() => {
+        result.current.handleKeyPress('w')
+        result.current.handleKeyPress('o')
+        result.current.handleKeyPress('r')
+        result.current.handleKeyPress('d')
+        result.current.handleKeyPress('-') // first dash
+      })
+
+      // After first dash, em-dash should be completed
+      expect(result.current.chars[4].state).toBe(CharState.CORRECT)
+      expect(result.current.cursorPosition).toBe(5) // past the em-dash
+    })
+  })
+})

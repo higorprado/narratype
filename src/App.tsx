@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import HomePage from '@/pages/HomePage'
+import TypingConsolePage from '@/pages/TypingConsolePage'
 import { useParams } from 'react-router-dom'
 import { getBookBySlug } from '@/data'
 
@@ -17,7 +18,7 @@ function App() {
       <Route path="/chapters/:bookSlug" element={<ChaptersPage />} />
       <Route
         path="/typing-console/:bookSlug/:chapterIndex/:pageIndex"
-        element={<div>Typing Console - Coming Soon</div>}
+        element={<TypingConsolePage />}
       />
     </Routes>
   )

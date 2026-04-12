@@ -1,0 +1,55 @@
+.char {
+  position: relative;
+  font-size: 1.15rem;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+}
+
+.untyped {
+  color: var(--color-untyped);
+}
+
+.correct {
+  color: var(--color-text);
+}
+
+.incorrect {
+  color: var(--color-incorrect);
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 3px;
+}
+
+.cursor {
+  border: 1.5px solid var(--color-cursor);
+  border-radius: 2px;
+  padding: 0 1px;
+  margin: 0 -1px;
+}
+
+.cursor-line {
+  border: none;
+  border-left: 2px solid var(--color-cursor);
+  padding: 0;
+  margin: 0;
+}
+
+.cursor-under {
+  border: none;
+  border-bottom: 2px solid var(--color-cursor);
+  padding: 0;
+  margin: 0;
+}
+
+.cursor-dot {
+  border: none;
+  border-bottom: 3px dotted var(--color-cursor);
+  padding: 0;
+  margin: 0;
+}
+
+.special {
+  opacity: 0.4;
+  font-size: 0.9em;
+  user-select: none;
+}

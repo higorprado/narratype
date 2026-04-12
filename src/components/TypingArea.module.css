@@ -1,0 +1,28 @@
+.area {
+  outline: none;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  font-family: var(--font-family);
+  min-height: 300px;
+}
+
+.area:focus {
+  outline: none;
+}
+
+.paragraph {
+  margin: 0 0 1.5em;
+  line-height: 1.8;
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: 4rem 0;
+}
