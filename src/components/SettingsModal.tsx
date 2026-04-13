@@ -69,6 +69,18 @@ const BOOLEAN_KEYS: { key: keyof Settings; label: string }[] = [
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { settings, updateSetting, resetSettings } = useSettings()
   const [activeTab, setActiveTab] = useState<TabId>('functionality')
+  const [localWordsPerPage, setLocalWordsPerPage] = useState(settings.wordsPerPage)
+
+  // Sync from external settings changes (e.g. Reset Defaults)
+  useEffect(() => {
+    setLocalWordsPerPage(settings.wordsPerPage)
+  }, [settings.wordsPerPage])
+
+  const commitWordsPerPage = useCallback(() => {
+    if (localWordsPerPage !== settings.wordsPerPage) {
+      updateSetting('wordsPerPage', localWordsPerPage)
+    }
+  }, [localWordsPerPage, settings.wordsPerPage, updateSetting])
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -153,17 +165,19 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <input
               type="range"
               className={styles.slider}
-              value={settings.wordsPerPage}
+              value={localWordsPerPage}
               min={75}
               max={1200}
               step={25}
-              onChange={(e) => updateSetting('wordsPerPage', parseInt(e.target.value, 10))}
+              onChange={(e) => setLocalWordsPerPage(parseInt(e.target.value, 10))}
+              onPointerUp={commitWordsPerPage}
+              onKeyUp={commitWordsPerPage}
               aria-label="Words per Page"
             />
-            <span className={styles.sliderValue}>{settings.wordsPerPage}</span>
+            <span className={styles.sliderValue}>{localWordsPerPage}</span>
           </div>
         </div>
-        {settings.wordsPerPage > 800 && (
+        {localWordsPerPage > 800 && (
           <div className={styles.warning}>High values may cause performance issues. Consider a lower number if the page feels sluggish.</div>
         )}
       </>
