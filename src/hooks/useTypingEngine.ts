@@ -160,6 +160,13 @@ function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
         }
         let newPos = cursor + 1
 
+        // Paragraph break: if we just typed '\n' and the next char is also '\n',
+        // auto-advance past it. One Enter keypress = one paragraph transition.
+        if (typedChar === '\n' && newPos < newChars.length && newChars[newPos].char === '\n') {
+          newChars[newPos] = { ...newChars[newPos], state: CharState.CORRECT }
+          newPos++
+        }
+
         // Skip punctuation if enabled
         if (options.skipPunctuation) {
           while (newPos < newChars.length && PUNCTUATION_CHARS.has(newChars[newPos].char)) {

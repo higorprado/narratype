@@ -25,4 +25,9 @@ describe('StatsBar', () => {
     expect(screen.getByTestId('stats-wpm')).toHaveTextContent('43')
     expect(screen.getByTestId('stats-acc')).toHaveTextContent('87')
   })
+  it('shows dashes for WPM when started but WPM is 0 (not enough time elapsed)', () => {
+    render(<StatsBar wpm={0} accuracy={95} isStarted={true} />)
+    expect(screen.getByTestId('stats-wpm')).toHaveTextContent('---')
+    expect(screen.getByTestId('stats-acc')).toHaveTextContent('95')
+  })
 })

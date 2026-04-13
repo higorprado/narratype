@@ -269,6 +269,26 @@ describe('useTypingEngine', () => {
       expect(result.current.cursorPosition).toBe(2) // at 'b'
     })
   })
+  it('should auto-advance past second newline in paragraph break (\\n\\n)', () => {
+    // Text with a paragraph break: "ab" + "\n\n" + "cd"
+    const text = 'ab\n\ncd'
+    const { result } = renderHook(() => useTypingEngine(text))
+
+    act(() => {
+      result.current.handleKeyPress('a')
+      result.current.handleKeyPress('b')
+      result.current.handleKeyPress('Enter') // should advance past both \n
+      result.current.handleKeyPress('c')
+    })
+
+    // First \n should be CORRECT (typed via Enter)
+    expect(result.current.chars[2].state).toBe(CharState.CORRECT)
+    // Second \n should also be CORRECT (auto-advanced)
+    expect(result.current.chars[3].state).toBe(CharState.CORRECT)
+    // Cursor should be at 'c' (index 4), and 'c' should now be CORRECT
+    expect(result.current.chars[4].state).toBe(CharState.CORRECT)
+    expect(result.current.cursorPosition).toBe(5)
+  })
 
   describe('internationalMode option', () => {
     it('should treat double dash as em-dash', () => {

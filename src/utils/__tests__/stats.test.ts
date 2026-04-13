@@ -21,6 +21,13 @@ describe('calculateWPM', () => {
     const wpm = calculateWPM(150, 30_000)
     expect(wpm).toBe(60)
   })
+
+  it('should return 0 when less than 3 seconds have elapsed', () => {
+    // 5 correct chars in 2 seconds — too early for reliable WPM
+    expect(calculateWPM(5, 2_000)).toBe(0)
+    // Exactly 3 seconds should compute
+    expect(calculateWPM(25, 3_000)).toBe(100)
+  })
 })
 
 describe('calculateAccuracy', () => {

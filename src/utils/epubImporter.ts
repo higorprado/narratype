@@ -7,10 +7,38 @@ export interface EpubImportResult {
   chapters: ImportedChapter[]
 }
 
-/** Strip HTML to plain text using the browser's DOMParser. */
-function htmlToPlainText(html: string): string {
+/** Strip HTML to plain text, preserving paragraph breaks from block-level elements. */
+const BLOCK_TAGS = new Set([
+  'P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+  'BLOCKQUOTE', 'LI', 'SECTION', 'ARTICLE', 'TR', 'DT', 'DD',
+])
+
+export function htmlToPlainText(html: string): string {
   const doc = new DOMParser().parseFromString(html, 'text/html')
-  return doc.body.textContent ?? ''
+  const parts: string[] = []
+
+  function walk(node: Node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent
+      if (text) parts.push(text)
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement
+      if (el.tagName === 'BR') {
+        parts.push('\n')
+      } else {
+        for (const child of el.childNodes) walk(child)
+        if (BLOCK_TAGS.has(el.tagName)) parts.push('\n\n')
+      }
+    }
+  }
+
+  walk(doc.body)
+  return parts
+    .join('')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/(^|\n) +/g, '$1')
+    .replace(/ +(\n|$)/g, '$1')
 }
 
 /** Generate a URL-safe slug from title and author. */
