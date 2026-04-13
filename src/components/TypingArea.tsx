@@ -121,14 +121,17 @@ export default function TypingArea({
     el.addEventListener('keydown', handleKeyDown)
     return () => el.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
-  // Auto-scroll: only when cursor leaves the viewport. Uses instant scroll to
-  // avoid animation pileup during rapid typing (e.g. holding Backspace).
+  // Auto-scroll: scrolls before cursor reaches the bottom edge (2-line lookahead).
+  // Skipped when cursorPosition === 0 to avoid interfering with the parent's
+  // useLayoutEffect scroll reset on page transitions.
   useEffect(() => {
-    if (!autoScroll || !cursorRef.current) return
+    if (!autoScroll || !cursorRef.current || cursorPosition === 0) return
     const rect = cursorRef.current.getBoundingClientRect()
-    const inView = rect.top >= 0 && rect.bottom <= window.innerHeight
-    if (!inView) {
-      cursorRef.current.scrollIntoView({ block: 'nearest', behavior: 'instant' })
+    const lineHeight = rect.height || 24
+    const threshold = lineHeight * 2
+    const bottomBound = window.innerHeight - threshold
+    if (rect.top < 0 || rect.bottom > bottomBound + lineHeight) {
+      cursorRef.current.scrollIntoView({ block: 'center', behavior: 'instant' })
     }
   }, [cursorPosition, autoScroll])
 
@@ -226,7 +229,21 @@ export default function TypingArea({
       )
     }, 2000)
     return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+        const { cursorPosition: cp, chars: ch, startTime: st } = latestStateRef.current
+        if (cp > 0 || st !== null) {
+          saveTypingSession(
+            sessionRestore!.bookSlug,
+            sessionRestore!.chapterIndex,
+            sessionRestore!.pageIndex,
+            cp,
+            ch.map((c) => c.state),
+            st,
+            text,
+          )
+        }
+      }
     }
   }, [cursorPosition, hasSession, isComplete]) // eslint-disable-line react-hooks/exhaustive-deps
 
