@@ -10,6 +10,19 @@ import {
 import CharSpan from './CharSpan'
 import styles from './TypingArea.module.css'
 
+/** Maps CursorStyle to the overlay CSS module class. */
+const overlayStyleMap: Record<CursorStyle, string> = {
+  BOX: styles.cursorBox,
+  LINE: styles.cursorLine,
+  UNDER: styles.cursorUnder,
+  DOT: styles.cursorDot,
+  HIGH: styles.cursorHigh,
+  'E-BOX': styles.cursorEBox,
+  'H-UNDER': styles.cursorHUnder,
+  'H-DOT': styles.cursorHDot,
+  NONE: styles.cursorNone,
+}
+
 interface TypingAreaProps {
   text: string
   onComplete?: () => void
@@ -47,6 +60,7 @@ export default function TypingArea({
   } = useTypingEngine(text, options, sessionRestore)
   const containerRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLSpanElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
   const prevCompleteRef = useRef(false)
   const [isFocused, setIsFocused] = useState(false)
 
@@ -117,6 +131,22 @@ export default function TypingArea({
       cursorRef.current.scrollIntoView({ block: 'nearest', behavior: 'instant' })
     }
   }, [cursorPosition, autoScroll])
+
+  // Position the cursor overlay to match the active character's bounding rect
+  useEffect(() => {
+    const charEl = cursorRef.current
+    const container = containerRef.current
+    const overlay = overlayRef.current
+    if (!charEl || !container || !overlay) return
+
+    const charRect = charEl.getBoundingClientRect()
+    const containerRect = container.getBoundingClientRect()
+
+    overlay.style.left = `${charRect.left - containerRect.left}px`
+    overlay.style.top = `${charRect.top - containerRect.top}px`
+    overlay.style.width = `${charRect.width}px`
+    overlay.style.height = `${charRect.height}px`
+  }, [cursorPosition, chars, isFocused, text])
 
   // Stats reporting controlled by statsUpdateFrequency
   const shouldReportStats = useCallback(
@@ -244,6 +274,16 @@ export default function TypingArea({
 
   const paragraphs = buildParagraphs(effectiveChars, effectiveCursor)
 
+  // Determine active char style (BOX inverts text, HIGH highlights text)
+  const effectiveCursorStyle = cursorStyle ?? 'BOX'
+  const activeCharStyle: React.CSSProperties =
+    effectiveCursor === -1 ? {}
+    : effectiveCursorStyle === 'BOX' ? { color: 'var(--color-surface)' }
+    : effectiveCursorStyle === 'HIGH' ? { color: 'var(--color-cursor)' }
+    : {}
+
+  const showOverlay = effectiveCursor !== -1
+
   return (
     <div
       ref={containerRef}
@@ -255,6 +295,16 @@ export default function TypingArea({
       onFocus={() => setIsFocused(true)}
       onBlur={() => setIsFocused(false)}
     >
+      {showOverlay && (
+        <div
+          ref={overlayRef}
+          className={[
+            styles.cursorOverlay,
+            smoothCursor ? styles.cursorOverlaySmooth : '',
+            overlayStyleMap[effectiveCursorStyle],
+          ].filter(Boolean).join(' ')}
+        />
+      )}
       {text.length === 0 ? (
         <p className={styles.empty}>No text to type.</p>
       ) : (
@@ -268,10 +318,9 @@ export default function TypingArea({
                   char={item.char}
                   state={item.state}
                   isCursor={true}
-                  cursorStyle={cursorStyle}
-                  smoothCursor={smoothCursor}
                   showLiteralMistypes={showLiteralMistypes}
                   typedChar={item.typedChar}
+                  style={activeCharStyle}
                 />
               ) : (
                 <CharSpan
@@ -279,7 +328,6 @@ export default function TypingArea({
                   char={item.char}
                   state={item.state}
                   isCursor={false}
-                  smoothCursor={smoothCursor}
                   showLiteralMistypes={showLiteralMistypes}
                   typedChar={item.typedChar}
                 />
