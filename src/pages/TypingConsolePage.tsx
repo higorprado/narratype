@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getBookBySlug, getPage, getPageCount, getChapter } from '@/data'
 import type { TypingStats } from '@/types'
@@ -18,6 +18,7 @@ export default function TypingConsolePage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
   const [restartKey, setRestartKey] = useState(0)
+  const mainRef = useRef<HTMLElement>(null)
   const [showRestartConfirm, setShowRestartConfirm] = useState(false)
   const { settings } = useSettings()
   const { markPageComplete, setLastPage, resetChapterProgress } = useProgress()
@@ -83,7 +84,6 @@ export default function TypingConsolePage() {
     (newPageIdx: number) => {
       if (!bookSlug) return
       setIsCompleted(false)
-      setStats(null)
       setSavedSession(null)
       navigate(`/typing-console/${bookSlug}/${chapterIndex}/${newPageIdx}`)
     },
@@ -92,6 +92,11 @@ export default function TypingConsolePage() {
 
   const isFirstPage = chapterIndex === 0 && pageIndex === 0
   const isLastPage = pageIndex >= totalPages - 1
+
+  // Reset scroll when page changes
+  useEffect(() => {
+    if (mainRef.current) mainRef.current.scrollTop = 0
+  }, [pageIndex, chapterIndex])
 
   // Auto-advance to next page on completion
   useEffect(() => {
@@ -157,7 +162,7 @@ export default function TypingConsolePage() {
         <StatsBar wpm={wpm} accuracy={accuracy} isStarted={isStarted} />
       )}
 
-      <main className={styles.main}>
+      <main ref={mainRef} className={styles.main}>
         <div className={`${styles.typingWrapper} ${isCompleted ? styles.completed : ''}`}>
           <TypingArea
             key={`${bookSlug}-${chapterIndex}-${pageIndex}-${restartKey}`}
