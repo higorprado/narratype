@@ -160,7 +160,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
 
         <div className={styles.sliderRow}>
-          <span className={styles.rowLabel}>Words per Page</span>
+          <span className={styles.rowLabel}>Words per Page (approximate)</span>
           <div className={styles.sliderControl}>
             <input
               type="range"
@@ -174,7 +174,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               onKeyUp={commitWordsPerPage}
               aria-label="Words per Page"
             />
-            <span className={styles.sliderValue}>{localWordsPerPage}</span>
+            <span className={styles.sliderValue}>{localWordsPerPage >= 1200 ? 'full' : localWordsPerPage}</span>
           </div>
         </div>
         {localWordsPerPage > 800 && (
