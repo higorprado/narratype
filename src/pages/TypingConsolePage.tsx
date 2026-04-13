@@ -30,11 +30,16 @@ export default function TypingConsolePage() {
   const chapter = bookSlug ? getChapter(bookSlug, chapterIndex) : undefined
   const page = bookSlug ? getPage(bookSlug, chapterIndex, pageIndex, settings.wordsPerPage) : undefined
   const totalPages = bookSlug ? getPageCount(bookSlug, chapterIndex, settings.wordsPerPage) : 0
-  // Load saved typing session
+  // Load saved typing session (resets when page content changes, e.g. wordsPerPage)
   const [savedSession, setSavedSession] = useState(() => {
     if (!bookSlug || !page) return null
     return loadTypingSession(bookSlug, chapterIndex, pageIndex, page.text)
   })
+  useEffect(() => {
+    setSavedSession(
+      page && bookSlug ? loadTypingSession(bookSlug, chapterIndex, pageIndex, page.text) : null,
+    )
+  }, [page?.text])
 
   const sessionRestore: TypingEngineRestore | undefined = useMemo(() => {
     if (!bookSlug) return undefined
@@ -93,6 +98,17 @@ export default function TypingConsolePage() {
   const isFirstPage = chapterIndex === 0 && pageIndex === 0
   const isLastPage = pageIndex >= totalPages - 1
 
+  // When wordsPerPage changes, page boundaries shift. If current pageIndex is
+  // out of bounds, navigate to page 0. Only fires on setting change, not initial mount.
+  const prevWordsPerPageRef = useRef(settings.wordsPerPage)
+  useEffect(() => {
+    if (prevWordsPerPageRef.current !== settings.wordsPerPage) {
+      prevWordsPerPageRef.current = settings.wordsPerPage
+      if (totalPages > 0 && pageIndex >= totalPages && bookSlug) {
+        goToPage(0)
+      }
+    }
+  }, [settings.wordsPerPage]) // eslint-disable-line react-hooks/exhaustive-deps
   // Reset scroll when page changes (useLayoutEffect to prevent flash)
   useLayoutEffect(() => {
     if (mainRef.current) mainRef.current.scrollTop = 0
@@ -165,7 +181,7 @@ export default function TypingConsolePage() {
       <main ref={mainRef} className={styles.main}>
         <div className={`${styles.typingWrapper} ${isCompleted ? styles.completed : ''}`}>
           <TypingArea
-            key={`${bookSlug}-${chapterIndex}-${pageIndex}-${restartKey}`}
+            key={`${bookSlug}-${chapterIndex}-${pageIndex}-${page.text.length}-${restartKey}`}
             text={page.text}
             options={{
               stopCursorAfterMistype: settings.stopCursorAfterMistype,

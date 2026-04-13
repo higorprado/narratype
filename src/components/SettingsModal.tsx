@@ -147,20 +147,21 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         </div>
 
-        <div className={styles.row}>
+        <div className={styles.sliderRow}>
           <span className={styles.rowLabel}>Words per Page</span>
-          <input
-            type="number"
-            className={styles.numberInput}
-            value={settings.wordsPerPage}
-            min={75}
-            step={25}
-            onChange={(e) => {
-              const val = parseInt(e.target.value, 10)
-              if (!isNaN(val) && val >= 75) updateSetting('wordsPerPage', val)
-            }}
-            aria-label="Words per Page"
-          />
+          <div className={styles.sliderControl}>
+            <input
+              type="range"
+              className={styles.slider}
+              value={settings.wordsPerPage}
+              min={75}
+              max={1200}
+              step={25}
+              onChange={(e) => updateSetting('wordsPerPage', parseInt(e.target.value, 10))}
+              aria-label="Words per Page"
+            />
+            <span className={styles.sliderValue}>{settings.wordsPerPage}</span>
+          </div>
         </div>
         {settings.wordsPerPage > 800 && (
           <div className={styles.warning}>High values may cause performance issues. Consider a lower number if the page feels sluggish.</div>
