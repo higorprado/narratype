@@ -289,6 +289,32 @@ describe('useTypingEngine', () => {
     expect(result.current.chars[4].state).toBe(CharState.CORRECT)
     expect(result.current.cursorPosition).toBe(5)
   })
+  it('should auto-advance past second newline in paragraph break (step by step)', () => {
+    const text = 'ab\n\ncd'
+    const { result } = renderHook(() => useTypingEngine(text))
+
+    // Step 1: type 'a'
+    act(() => { result.current.handleKeyPress('a') })
+    expect(result.current.cursorPosition).toBe(1)
+    expect(result.current.chars[0].state).toBe(CharState.CORRECT)
+
+    // Step 2: type 'b'
+    act(() => { result.current.handleKeyPress('b') })
+    expect(result.current.cursorPosition).toBe(2) // at first \n
+    expect(result.current.chars[1].state).toBe(CharState.CORRECT)
+
+    // Step 3: press Enter at first \n — should auto-advance past second \n
+    act(() => { result.current.handleKeyPress('Enter') })
+    expect(result.current.cursorPosition).toBe(4) // past both \n, at 'c'
+    expect(result.current.chars[2].state).toBe(CharState.CORRECT) // first \n
+    expect(result.current.chars[3].state).toBe(CharState.CORRECT) // second \n (auto)
+    expect(result.current.chars[4].state).toBe(CharState.UNTYPED) // 'c' not typed yet
+
+    // Step 4: type 'c'
+    act(() => { result.current.handleKeyPress('c') })
+    expect(result.current.cursorPosition).toBe(5)
+    expect(result.current.chars[4].state).toBe(CharState.CORRECT)
+  })
 
   describe('internationalMode option', () => {
     it('should treat double dash as em-dash', () => {
