@@ -17,6 +17,7 @@ export default function TypingConsolePage() {
   const [stats, setStats] = useState<TypingStats | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [isInactive, setIsInactive] = useState(false)
   const [restartKey, setRestartKey] = useState(0)
   const mainRef = useRef<HTMLElement>(null)
   const [showRestartConfirm, setShowRestartConfirm] = useState(false)
@@ -199,6 +200,9 @@ export default function TypingConsolePage() {
             statsUpdateFrequency={settings.statsUpdateFrequency}
             onStatsUpdate={handleStatsUpdate}
             sessionRestore={sessionRestore}
+            inactivityTimeout={settings.inactivityTimeout}
+            onInactivity={() => setIsInactive(true)}
+            onActivity={() => setIsInactive(false)}
             onComplete={() => {
               if (bookSlug) {
                 markPageComplete(bookSlug, chapterIndex, pageIndex)
@@ -210,6 +214,16 @@ export default function TypingConsolePage() {
             <div className={styles.completionOverlay} aria-live="polite">
               <span className={styles.checkmark}>&#10003;</span>
               <span className={styles.completionText}>Page complete!</span>
+            </div>
+          )}
+          {isInactive && !isCompleted && (
+            <div className={styles.inactivityOverlay} aria-live="polite">
+              <span className={styles.pauseIcon}>&#9208;</span>
+              <span className={styles.inactivityText}>Paused</span>
+              <div className={styles.inactivityStats}>
+                <span>{stats?.wpm ?? 0} WPM</span>
+                <span>{stats?.accuracy ?? 100}% ACC</span>
+              </div>
             </div>
           )}
         </div>

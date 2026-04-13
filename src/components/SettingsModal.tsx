@@ -70,17 +70,25 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { settings, updateSetting, resetSettings } = useSettings()
   const [activeTab, setActiveTab] = useState<TabId>('functionality')
   const [localWordsPerPage, setLocalWordsPerPage] = useState(settings.wordsPerPage)
+  const [localInactivityTimeout, setLocalInactivityTimeout] = useState(settings.inactivityTimeout)
 
   // Sync from external settings changes (e.g. Reset Defaults)
   useEffect(() => {
     setLocalWordsPerPage(settings.wordsPerPage)
-  }, [settings.wordsPerPage])
+    setLocalInactivityTimeout(settings.inactivityTimeout)
+  }, [settings.wordsPerPage, settings.inactivityTimeout])
 
   const commitWordsPerPage = useCallback(() => {
     if (localWordsPerPage !== settings.wordsPerPage) {
       updateSetting('wordsPerPage', localWordsPerPage)
     }
   }, [localWordsPerPage, settings.wordsPerPage, updateSetting])
+
+  const commitInactivityTimeout = useCallback(() => {
+    if (localInactivityTimeout !== settings.inactivityTimeout) {
+      updateSetting('inactivityTimeout', localInactivityTimeout)
+    }
+  }, [localInactivityTimeout, settings.inactivityTimeout, updateSetting])
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -180,6 +188,25 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         {localWordsPerPage > 800 && (
           <div className={styles.warning}>High values may cause performance issues. Consider a lower number if the page feels sluggish.</div>
         )}
+
+        <div className={styles.sliderRow}>
+          <span className={styles.rowLabel}>Inactivity Timeout (seconds)</span>
+          <div className={styles.sliderControl}>
+            <input
+              type="range"
+              className={styles.slider}
+              value={localInactivityTimeout}
+              min={5}
+              max={30}
+              step={1}
+              onChange={(e) => setLocalInactivityTimeout(parseInt(e.target.value, 10))}
+              onPointerUp={commitInactivityTimeout}
+              onKeyUp={commitInactivityTimeout}
+              aria-label="Inactivity Timeout"
+            />
+            <span className={styles.sliderValue}>{localInactivityTimeout}s</span>
+          </div>
+        </div>
       </>
     )
   }

@@ -56,6 +56,7 @@ export interface Settings {
   virtualKeyboard: boolean
   statsUpdateFrequency: StatsUpdateFrequency
   wordsPerPage: number
+  inactivityTimeout: number
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -75,4 +76,5 @@ export const DEFAULT_SETTINGS: Settings = {
   virtualKeyboard: false,
   statsUpdateFrequency: 'word',
   wordsPerPage: 350,
+  inactivityTimeout: 5,
 }

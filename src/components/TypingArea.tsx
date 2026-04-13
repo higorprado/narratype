@@ -1,8 +1,10 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { useTypingEngine } from '@/hooks/useTypingEngine'
 import type { TypingEngineOptions, TypingEngineRestore } from '@/hooks/useTypingEngine'
+import { useStatsAccumulator } from '@/hooks/useStatsAccumulator'
 import { CharState } from '@/types'
 import type { TypingStats, CursorStyle, StatsUpdateFrequency } from '@/types'
+import { calculateWPM } from '@/utils/stats'
 import {
   saveTypingSession,
   clearTypingSession,
@@ -35,6 +37,9 @@ interface TypingAreaProps {
   showLiteralMistypes?: boolean
   statsUpdateFrequency?: StatsUpdateFrequency
   sessionRestore?: TypingEngineRestore
+  inactivityTimeout?: number
+  onInactivity?: () => void
+  onActivity?: () => void
 }
 
 export default function TypingArea({
@@ -49,6 +54,9 @@ export default function TypingArea({
   showLiteralMistypes = false,
   statsUpdateFrequency = 'word',
   sessionRestore,
+  inactivityTimeout = 5,
+  onInactivity,
+  onActivity,
 }: TypingAreaProps) {
   const {
     chars,
@@ -58,6 +66,7 @@ export default function TypingArea({
     handleKeyPress,
     getStats,
   } = useTypingEngine(text, options, sessionRestore)
+  const statsAcc = useStatsAccumulator()
   const containerRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLSpanElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -65,6 +74,12 @@ export default function TypingArea({
   const [isFocused, setIsFocused] = useState(false)
 
   const lastStatsPosRef = useRef(-1)
+  const prevCursorPosRef = useRef(0)
+
+  // Inactivity timeout tracking
+  const lastKeystrokeTimeRef = useRef<number | null>(null)
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isIdleRef = useRef(false)
 
   // Dead key tracking: on international keyboards (ABNT2, US-Intl, etc.), pressing
   // ' sends key='Dead'. We store the physical key code, then when the user
@@ -151,6 +166,26 @@ export default function TypingArea({
     overlay.style.height = `${charRect.height}px`
   }, [cursorPosition, chars, isFocused, text])
 
+  // Build complete stats: char counts from engine, time from accumulator
+  const buildFullStats = useCallback((): TypingStats => {
+    const charStats = getStats()
+    const elapsedMs = statsAcc.getElapsedMs()
+    return {
+      ...charStats,
+      elapsedMs,
+      wpm: calculateWPM(charStats.correctChars, elapsedMs),
+    }
+  }, [getStats, statsAcc])
+
+  const buildFullStatsAtTime = useCallback((timestamp: number): TypingStats => {
+    const charStats = getStats()
+    const elapsedMs = statsAcc.getElapsedMsAtTime(timestamp)
+    return {
+      ...charStats,
+      elapsedMs,
+      wpm: calculateWPM(charStats.correctChars, elapsedMs),
+    }
+  }, [getStats, statsAcc])
   // Stats reporting controlled by statsUpdateFrequency
   const shouldReportStats = useCallback(
     (pos: number): boolean => {
@@ -176,9 +211,69 @@ export default function TypingArea({
     lastStatsPosRef.current = cursorPosition
 
     if (shouldReportStats(cursorPosition)) {
-      onStatsUpdate(getStats())
+      onStatsUpdate(buildFullStats())
     }
-  }, [cursorPosition, isComplete, startTime, getStats, onStatsUpdate, shouldReportStats, chars])
+  }, [cursorPosition, isComplete, startTime, buildFullStats, onStatsUpdate, shouldReportStats, chars])
+
+  // Track cursor changes in stats accumulator
+  useEffect(() => {
+    if (cursorPosition === prevCursorPosRef.current) return
+    const delta = cursorPosition - prevCursorPosRef.current
+    prevCursorPosRef.current = cursorPosition
+
+    if (delta > 0) {
+      // Forward movement: could be multiple chars (skip punctuation, paragraph break)
+      for (let i = 0; i < delta; i++) statsAcc.onCharTyped()
+    } else if (delta < 0) {
+      statsAcc.onCharDeleted()
+    }
+  }, [cursorPosition, statsAcc])
+
+  // Inactivity timeout: detect pauses and freeze stats
+  useEffect(() => {
+    if (startTime === null || isComplete) return
+    lastKeystrokeTimeRef.current = Date.now()
+
+    // If resuming from idle (IDLE -> TYPING), notify parent
+    if (isIdleRef.current) {
+      isIdleRef.current = false
+      onActivity?.()
+    }
+
+    // Restart inactivity timer
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current)
+    inactivityTimerRef.current = setTimeout(() => {
+      isIdleRef.current = true
+      // Freeze: accumulate session into totals, then compute stats
+      statsAcc.onPause(lastKeystrokeTimeRef.current!)
+      const frozenStats = buildFullStatsAtTime(lastKeystrokeTimeRef.current!)
+      onStatsUpdate?.(frozenStats)
+      onInactivity?.()
+
+      // Flush session save
+      if (sessionRestore?.bookSlug != null) {
+        const { cursorPosition: cp, chars: ch, startTime: st } = { cursorPosition, chars, startTime }
+        if (cp > 0 || st !== null) {
+          saveTypingSession(
+            sessionRestore.bookSlug,
+            sessionRestore.chapterIndex,
+            sessionRestore.pageIndex,
+            cp,
+            ch.map((c) => c.state),
+            st,
+            text,
+          )
+        }
+      }
+    }, inactivityTimeout * 1000)
+
+    return () => {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current)
+        inactivityTimerRef.current = null
+      }
+    }
+  }, [cursorPosition]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fire onComplete once when page finishes
   useEffect(() => {

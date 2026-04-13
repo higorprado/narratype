@@ -2,7 +2,7 @@ import { useReducer, useCallback, useRef, useEffect } from 'react'
 import { CharState } from '@/types'
 import type { TypingChar, TypingStats } from '@/types'
 import { compareChars } from '@/utils/charComparator'
-import { calculateStats } from '@/utils/stats'
+import { calculateAccuracy } from '@/utils/stats'
 import type { SavedTypingSession } from '@/utils/typingSessionStorage'
 
 export interface TypingEngineOptions {
@@ -184,6 +184,7 @@ function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
         }
       }
 
+
       default:
         return state
     }
@@ -222,6 +223,7 @@ export function useTypingEngine(
     dispatch({ type: 'RESET', text })
   }, [text, dispatch])
 
+
   const getStats = useCallback((): TypingStats => {
     let correct = 0
     let typed = 0
@@ -231,13 +233,15 @@ export function useTypingEngine(
       if (s === CharState.CORRECT) { correct++; typed++ }
       else if (s === CharState.INCORRECT) { typed++ }
     }
-    const elapsedMs = state.startTime ? Date.now() - state.startTime : 0
-    return calculateStats({
+    return {
       correctChars: correct,
       totalTypedChars: typed,
-      elapsedMs,
-    })
-  }, [state.chars, state.startTime])
+      wpm: 0,
+      accuracy: calculateAccuracy(correct, typed),
+      elapsedMs: 0,
+    }
+  }, [state.chars])
+
 
   return {
     chars: state.chars,
