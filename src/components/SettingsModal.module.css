@@ -303,8 +303,8 @@
 }
 
 .sliderValue {
-  min-width: 3ch;
-  text-align: right;
+  width: 4ch;
+  text-align: center;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-accent);
