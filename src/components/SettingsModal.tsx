@@ -146,6 +146,25 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             ))}
           </div>
         </div>
+
+        <div className={styles.row}>
+          <span className={styles.rowLabel}>Words per Page</span>
+          <input
+            type="number"
+            className={styles.numberInput}
+            value={settings.wordsPerPage}
+            min={75}
+            step={25}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10)
+              if (!isNaN(val) && val >= 75) updateSetting('wordsPerPage', val)
+            }}
+            aria-label="Words per Page"
+          />
+        </div>
+        {settings.wordsPerPage > 800 && (
+          <div className={styles.warning}>High values may cause performance issues. Consider a lower number if the page feels sluggish.</div>
+        )}
       </>
     )
   }

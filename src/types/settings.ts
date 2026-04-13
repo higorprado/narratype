@@ -55,6 +55,7 @@ export interface Settings {
   autoScroll: boolean
   virtualKeyboard: boolean
   statsUpdateFrequency: StatsUpdateFrequency
+  wordsPerPage: number
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -73,4 +74,5 @@ export const DEFAULT_SETTINGS: Settings = {
   autoScroll: true,
   virtualKeyboard: false,
   statsUpdateFrequency: 'word',
+  wordsPerPage: 350,
 }

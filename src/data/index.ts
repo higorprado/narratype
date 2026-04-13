@@ -29,16 +29,16 @@ export function getChapter(bookSlug: BookSlug, chapterIndex: number) {
   return { ...chapter, text }
 }
 
-export function getPage(bookSlug: BookSlug, chapterIndex: number, pageIndex: number): Page | undefined {
+export function getPage(bookSlug: BookSlug, chapterIndex: number, pageIndex: number, targetWords?: number): Page | undefined {
   const chapter = getChapter(bookSlug, chapterIndex)
   if (!chapter) return undefined
-  const pages = splitTextIntoPages(chapter.text)
+  const pages = splitTextIntoPages(chapter.text, targetWords ? { targetWords } : undefined)
   if (pageIndex < 0 || pageIndex >= pages.length) return undefined
   return { text: pages[pageIndex], chapterIndex, pageIndex }
 }
 
-export function getPageCount(bookSlug: BookSlug, chapterIndex: number): number {
+export function getPageCount(bookSlug: BookSlug, chapterIndex: number, targetWords?: number): number {
   const chapter = getChapter(bookSlug, chapterIndex)
   if (!chapter) return 0
-  return splitTextIntoPages(chapter.text).length
+  return splitTextIntoPages(chapter.text, targetWords ? { targetWords } : undefined).length
 }

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
+import { useState, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getBookBySlug, getPage, getPageCount, getChapter } from '@/data'
 import type { TypingStats } from '@/types'
@@ -28,8 +28,8 @@ export default function TypingConsolePage() {
 
   const book = bookSlug ? getBookBySlug(bookSlug) : undefined
   const chapter = bookSlug ? getChapter(bookSlug, chapterIndex) : undefined
-  const page = bookSlug ? getPage(bookSlug, chapterIndex, pageIndex) : undefined
-  const totalPages = bookSlug ? getPageCount(bookSlug, chapterIndex) : 0
+  const page = bookSlug ? getPage(bookSlug, chapterIndex, pageIndex, settings.wordsPerPage) : undefined
+  const totalPages = bookSlug ? getPageCount(bookSlug, chapterIndex, settings.wordsPerPage) : 0
   // Load saved typing session
   const [savedSession, setSavedSession] = useState(() => {
     if (!bookSlug || !page) return null
@@ -93,8 +93,8 @@ export default function TypingConsolePage() {
   const isFirstPage = chapterIndex === 0 && pageIndex === 0
   const isLastPage = pageIndex >= totalPages - 1
 
-  // Reset scroll when page changes
-  useEffect(() => {
+  // Reset scroll when page changes (useLayoutEffect to prevent flash)
+  useLayoutEffect(() => {
     if (mainRef.current) mainRef.current.scrollTop = 0
   }, [pageIndex, chapterIndex])
 
