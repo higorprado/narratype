@@ -69,14 +69,22 @@ describe('TypingArea', () => {
     expect(paragraphs.length).toBe(2)
   })
 
-  it('calls onStatsUpdate after typing starts', () => {
+  it('calls onStatsUpdate at word boundary with default word frequency', () => {
     const onStatsUpdate = vi.fn()
-    render(<TypingArea text="test" onStatsUpdate={onStatsUpdate} />)
+    render(<TypingArea text="hi world" onStatsUpdate={onStatsUpdate} />)
     const area = screen.getByTestId('typing-area')
 
-    fireEvent.keyDown(area, { key: 't' })
+    // Type 'h' — no stats yet (not a word boundary)
+    fireEvent.keyDown(area, { key: 'h' })
+    expect(onStatsUpdate).not.toHaveBeenCalled()
 
-    expect(onStatsUpdate).toHaveBeenCalled()
+    // Type 'i' — still no stats
+    fireEvent.keyDown(area, { key: 'i' })
+    expect(onStatsUpdate).not.toHaveBeenCalled()
+
+    // Type ' ' (space) — word boundary crossed, stats should fire
+    fireEvent.keyDown(area, { key: ' ' })
+    expect(onStatsUpdate).toHaveBeenCalledTimes(1)
   })
 
   it('handles dead key followed by space as the base character', () => {

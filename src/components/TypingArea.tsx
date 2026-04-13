@@ -157,15 +157,18 @@ export default function TypingArea({
         case 'page':
           return isComplete
         case 'line': {
-          // Report on newlines and on completion
+          // Report when cursor crosses a newline or on completion
           if (isComplete) return true
-          const char = chars[pos]
-          return char?.char === '\n'
+          if (chars[pos]?.char === '\n') return true
+          if (pos > 0) return chars[pos - 1]?.char === '\n'
+          return false
         }
         case 'word':
         default:
-          // Report on every position change (every keystroke effectively)
-          return true
+          // Report at word boundaries (after spaces) or on completion
+          if (isComplete) return true
+          if (pos > 0) return chars[pos - 1]?.char === ' '
+          return true // first keystroke
       }
     },
     [startTime, statsUpdateFrequency, isComplete, chars],
