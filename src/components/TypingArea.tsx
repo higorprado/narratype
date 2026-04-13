@@ -156,13 +156,6 @@ export default function TypingArea({
       switch (statsUpdateFrequency) {
         case 'page':
           return isComplete
-        case 'line': {
-          // Report when cursor crosses a newline or on completion
-          if (isComplete) return true
-          if (chars[pos]?.char === '\n') return true
-          if (pos > 0) return chars[pos - 1]?.char === '\n'
-          return false
-        }
         case 'word':
         default:
           // Report at word boundaries (after spaces) or on completion

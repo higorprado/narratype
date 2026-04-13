@@ -12,7 +12,7 @@ interface SettingsModalProps {
 type TabId = 'functionality' | 'themes' | 'fonts'
 
 const CURSOR_STYLES: CursorStyle[] = ['BOX', 'LINE', 'UNDER', 'DOT', 'HIGH', 'E-BOX', 'H-UNDER', 'H-DOT', 'NONE']
-const STATS_FREQUENCIES: StatsUpdateFrequency[] = ['word', 'line', 'page']
+const STATS_FREQUENCIES: StatsUpdateFrequency[] = ['word', 'page']
 const THEMES: ThemeName[] = [
   'classic-dark', 'classic-light', 'timber', 'ocean', 'bubblegum', 'newsprint',
   'cinder', 'bumblebee', 'terracotta', 'canopy', 'lagoon', 'mellow',

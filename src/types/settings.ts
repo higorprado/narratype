@@ -37,7 +37,7 @@ export type FontName =
   | 'bitter'
   | 'comic-sans'
 
-export type StatsUpdateFrequency = 'word' | 'line' | 'page'
+export type StatsUpdateFrequency = 'word' | 'page'
 
 export interface Settings {
   theme: ThemeName
