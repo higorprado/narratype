@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getBookBySlug, getPage, getPageCount, getChapter } from '@/data'
 import type { TypingStats } from '@/types'
@@ -8,8 +8,9 @@ import TypingArea from '@/components/TypingArea'
 import SettingsModal from '@/components/SettingsModal'
 import { useProgress } from '@/context/ProgressContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { loadTypingSession, clearTypingSession } from '@/utils/typingSessionStorage'
+import type { TypingEngineRestore } from '@/hooks/useTypingEngine'
 import styles from './TypingConsolePage.module.css'
-
 export default function TypingConsolePage() {
   const { bookSlug, chapterIndex: chapterIdx, pageIndex: pageIdx } = useParams()
   const navigate = useNavigate()
@@ -26,6 +27,21 @@ export default function TypingConsolePage() {
   const chapter = bookSlug ? getChapter(bookSlug, chapterIndex) : undefined
   const page = bookSlug ? getPage(bookSlug, chapterIndex, pageIndex) : undefined
   const totalPages = bookSlug ? getPageCount(bookSlug, chapterIndex) : 0
+  // Load saved typing session
+  const [savedSession, setSavedSession] = useState(() => {
+    if (!bookSlug || !page) return null
+    return loadTypingSession(bookSlug, chapterIndex, pageIndex, page.text)
+  })
+
+  const sessionRestore: TypingEngineRestore | undefined = useMemo(() => {
+    if (!bookSlug) return undefined
+    return {
+      savedSession: savedSession ?? null,
+      bookSlug,
+      chapterIndex,
+      pageIndex,
+    }
+  }, [bookSlug, chapterIndex, pageIndex, savedSession])
 
   const isStarted = stats !== null && stats.totalTypedChars > 0
   const wpm = stats?.wpm ?? 0
@@ -146,6 +162,7 @@ export default function TypingConsolePage() {
             showLiteralMistypes={settings.showLiteralMistypes}
             statsUpdateFrequency={settings.statsUpdateFrequency}
             onStatsUpdate={handleStatsUpdate}
+            sessionRestore={sessionRestore}
             onComplete={() => {
               if (bookSlug) {
                 markPageComplete(bookSlug, chapterIndex, pageIndex)
@@ -169,6 +186,10 @@ export default function TypingConsolePage() {
             onClick={() => {
               setStats(null)
               setIsCompleted(false)
+              setSavedSession(null)
+              if (bookSlug) {
+                clearTypingSession(bookSlug, chapterIndex, pageIndex)
+              }
               navigate(`/typing-console/${bookSlug}/${chapterIndex}/${pageIndex}`)
             }}
           >

@@ -69,5 +69,49 @@ selected by the general for his temporary use.
     expect(result).not.toMatch(/(?<!\n)\n(?!\n)/)
     // Paragraph break should be preserved
     expect(result).toContain('\n\n')
+    // Curly apostrophe should be normalized to straight
+    expect(result).toContain("Ts'ao")
+    expect(result).not.toContain('\u2019')
+  })
+
+  it('normalizes curly single quotes to straight apostrophes', () => {
+    expect(normalizeBookText('it\u2019s')).toBe("it's")
+    expect(normalizeBookText('\u2018hello\u2019')).toBe("'hello'")
+  })
+
+  it('normalizes curly double quotes to straight quotes', () => {
+    expect(normalizeBookText('\u201Chello\u201D')).toBe('"hello"')
+  })
+
+  it('normalizes guillemets to straight quotes', () => {
+    expect(normalizeBookText('\u00ABhello\u00BB')).toBe('"hello"')
+  })
+
+  it('handles mixed curly and straight quotes', () => {
+    const input = `He said \u201Cit\u2019s fine\u201D and left`
+    expect(normalizeBookText(input)).toBe('He said "it\'s fine" and left')
+  })
+
+  it('normalizes breve-u to plain u', () => {
+    expect(normalizeBookText('Sun Tz\u016D')).toBe('Sun Tzu')
+  })
+
+  it('normalizes ligatures', () => {
+    expect(normalizeBookText('\u0153uvre')).toBe('oeuvre')
+    expect(normalizeBookText('\u0152uvre')).toBe('Oeuvre')
+  })
+
+  it('normalizes section sign', () => {
+    expect(normalizeBookText('see \u00A726')).toBe('see sec.26')
+  })
+
+  it('normalizes ellipsis', () => {
+    expect(normalizeBookText('wait\u2026')).toBe('wait...')
+  })
+
+  it('normalizes accented characters to ASCII', () => {
+    expect(normalizeBookText('caf\u00E9')).toBe('cafe')
+    expect(normalizeBookText('\u00FCber')).toBe('uber')
+    expect(normalizeBookText('r\u00F4le')).toBe('role')
   })
 })

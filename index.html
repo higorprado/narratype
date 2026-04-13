@@ -12,6 +12,17 @@
     <title>Narratype — Practice Typing with Classic Literature</title>
   </head>
   <body>
+    <script>
+      // Polyfill Node.js globals for browser-only dependencies (epub-parser/sax)
+      window.process = window.process || {
+        env: {},
+        cwd: function() { return '/'; },
+        nextTick: function(fn) { queueMicrotask(fn); },
+        browser: true,
+        version: '',
+        versions: {}
+      };
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
