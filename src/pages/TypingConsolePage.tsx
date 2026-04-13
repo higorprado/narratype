@@ -28,8 +28,10 @@ export default function TypingConsolePage() {
 
   const book = bookSlug ? getBookBySlug(bookSlug) : undefined
   const chapter = bookSlug ? getChapter(bookSlug, chapterIndex) : undefined
-  const page = bookSlug ? getPage(bookSlug, chapterIndex, pageIndex, settings.wordsPerPage) : undefined
-  const totalPages = bookSlug ? getPageCount(bookSlug, chapterIndex, settings.wordsPerPage) : 0
+  const chapterWordCount = chapter ? chapter.text.split(/\s+/).filter(Boolean).length : 0
+  const effectiveWordsPerPage = settings.wordsPerPage >= 1200 && chapterWordCount > 0 ? chapterWordCount : settings.wordsPerPage
+  const page = bookSlug ? getPage(bookSlug, chapterIndex, pageIndex, effectiveWordsPerPage) : undefined
+  const totalPages = bookSlug ? getPageCount(bookSlug, chapterIndex, effectiveWordsPerPage) : 0
   // Load saved typing session (resets when page content changes, e.g. wordsPerPage)
   const [savedSession, setSavedSession] = useState(() => {
     if (!bookSlug || !page) return null
