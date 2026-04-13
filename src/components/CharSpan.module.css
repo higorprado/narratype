@@ -20,8 +20,13 @@
   text-underline-offset: 3px;
 }
 
-/* Default cursor (BOX) */
-.cursor {
+/* Smooth cursor transition */
+.smoothCursor {
+  transition: outline 0.1s ease, border 0.1s ease, background-color 0.1s ease;
+}
+
+/* BOX cursor */
+.cursor-box {
   outline: 2px solid var(--color-cursor);
   outline-offset: 1px;
   border-radius: 2px;
@@ -44,12 +49,14 @@
 
 .cursor-dot::after {
   content: '';
-  display: block;
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 4px;
   height: 4px;
   background: var(--color-cursor);
   border-radius: 50%;
-  margin: 0 auto;
 }
 
 .cursor-high {
@@ -58,8 +65,10 @@
   border-radius: 2px;
 }
 
+/* E-BOX: visually distinct from BOX with double border effect */
 .cursor-e-box {
-  outline: 3px solid var(--color-cursor);
+  border: 2px solid var(--color-cursor);
+  outline: 1px solid var(--color-cursor);
   outline-offset: 1px;
   border-radius: 2px;
 }
@@ -76,12 +85,14 @@
 
 .cursor-h-dot::after {
   content: '';
-  display: block;
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 7px;
   height: 7px;
   background: var(--color-cursor);
   border-radius: 50%;
-  margin: 0 auto;
 }
 
 .cursor-none {

@@ -63,7 +63,6 @@ const BOOLEAN_KEYS: { key: keyof Settings; label: string }[] = [
   { key: 'showLiteralMistypes', label: 'Show Literal Mistypes' },
   { key: 'hideUI', label: 'Hide UI' },
   { key: 'autoScroll', label: 'Auto-Scroll' },
-  { key: 'virtualKeyboard', label: 'Virtual Keyboard' },
 ]
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {

@@ -1,7 +1,8 @@
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, useState } from 'react'
 import { useTypingEngine } from '@/hooks/useTypingEngine'
 import type { TypingEngineOptions } from '@/hooks/useTypingEngine'
-import type { TypingStats, CursorStyle } from '@/types'
+import { CharState } from '@/types'
+import type { TypingStats, CursorStyle, StatsUpdateFrequency } from '@/types'
 import CharSpan from './CharSpan'
 import styles from './TypingArea.module.css'
 
@@ -12,9 +13,24 @@ interface TypingAreaProps {
   options?: TypingEngineOptions
   cursorStyle?: CursorStyle
   autoScroll?: boolean
+  smoothCursor?: boolean
+  readingMode?: boolean
+  showLiteralMistypes?: boolean
+  statsUpdateFrequency?: StatsUpdateFrequency
 }
 
-export default function TypingArea({ text, onComplete, onStatsUpdate, options, cursorStyle, autoScroll = true }: TypingAreaProps) {
+export default function TypingArea({
+  text,
+  onComplete,
+  onStatsUpdate,
+  options,
+  cursorStyle,
+  autoScroll = true,
+  smoothCursor = false,
+  readingMode = false,
+  showLiteralMistypes = false,
+  statsUpdateFrequency = 'word',
+}: TypingAreaProps) {
   const {
     chars,
     cursorPosition,
@@ -27,17 +43,26 @@ export default function TypingArea({ text, onComplete, onStatsUpdate, options, c
   const containerRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLSpanElement>(null)
   const prevCompleteRef = useRef(false)
+  const [isFocused, setIsFocused] = useState(false)
 
-  // Capture keyboard input
+  const lastStatsPosRef = useRef(-1)
+
+  // Capture keyboard input (disabled in reading mode)
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      if (readingMode) return
       if (e.key === ' ' || e.key === 'Backspace' || e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault()
       }
       handleKeyPress(e.key)
     },
-    [handleKeyPress],
+    [handleKeyPress, readingMode],
   )
+
+  // Auto-focus the typing area on mount
+  useEffect(() => {
+    containerRef.current?.focus()
+  }, [])
 
   useEffect(() => {
     const el = containerRef.current
@@ -53,12 +78,38 @@ export default function TypingArea({ text, onComplete, onStatsUpdate, options, c
     }
   }, [cursorPosition, autoScroll])
 
-  // Report stats on meaningful changes
+  // Stats reporting controlled by statsUpdateFrequency
+  const shouldReportStats = useCallback(
+    (pos: number): boolean => {
+      if (startTime === null) return false
+
+      switch (statsUpdateFrequency) {
+        case 'page':
+          return isComplete
+        case 'line': {
+          // Report on newlines and on completion
+          if (isComplete) return true
+          const char = chars[pos]
+          return char?.char === '\n'
+        }
+        case 'word':
+        default:
+          // Report on every position change (every keystroke effectively)
+          return true
+      }
+    },
+    [startTime, statsUpdateFrequency, isComplete, chars],
+  )
+
   useEffect(() => {
-    if (onStatsUpdate && startTime !== null) {
+    if (!onStatsUpdate) return
+    if (cursorPosition === lastStatsPosRef.current) return
+    lastStatsPosRef.current = cursorPosition
+
+    if (shouldReportStats(cursorPosition)) {
       onStatsUpdate(getStats())
     }
-  }, [cursorPosition, isComplete, startTime, getStats, onStatsUpdate])
+  }, [cursorPosition, isComplete, startTime, getStats, onStatsUpdate, shouldReportStats, chars])
 
   // Fire onComplete once when page finishes
   useEffect(() => {
@@ -71,20 +122,25 @@ export default function TypingArea({ text, onComplete, onStatsUpdate, options, c
     }
   }, [isComplete, onComplete])
 
-  // Reset the completion flag when reset is needed externally
-  // (reset is from useTypingEngine; page re-mounts on text change)
-
   // Build paragraph groups from chars, splitting on double newlines
-  const paragraphs = buildParagraphs(chars, cursorPosition)
+  // In reading mode, render all chars as CORRECT
+  const effectiveChars = readingMode
+    ? chars.map((c) => ({ ...c, state: CharState.CORRECT }))
+    : chars
+  const effectiveCursor = readingMode ? -1 : (isFocused ? cursorPosition : -1)
+
+  const paragraphs = buildParagraphs(effectiveChars, effectiveCursor)
 
   return (
     <div
       ref={containerRef}
       className={styles.area}
-      tabIndex={0}
+      tabIndex={readingMode ? undefined : 0}
       data-testid="typing-area"
-      role="textbox"
+      role={readingMode ? undefined : 'textbox'}
       aria-label="Typing area"
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
     >
       {text.length === 0 ? (
         <p className={styles.empty}>No text to type.</p>
@@ -100,6 +156,9 @@ export default function TypingArea({ text, onComplete, onStatsUpdate, options, c
                   state={item.state}
                   isCursor={true}
                   cursorStyle={cursorStyle}
+                  smoothCursor={smoothCursor}
+                  showLiteralMistypes={showLiteralMistypes}
+                  typedChar={item.typedChar}
                 />
               ) : (
                 <CharSpan
@@ -107,6 +166,9 @@ export default function TypingArea({ text, onComplete, onStatsUpdate, options, c
                   char={item.char}
                   state={item.state}
                   isCursor={false}
+                  smoothCursor={smoothCursor}
+                  showLiteralMistypes={showLiteralMistypes}
+                  typedChar={item.typedChar}
                 />
               ),
             )}
@@ -122,6 +184,7 @@ interface CharItem {
   char: string
   state: import('@/types').CharState
   isCursor: boolean
+  typedChar?: string
 }
 
 function buildParagraphs(
@@ -132,12 +195,11 @@ function buildParagraphs(
   let current: CharItem[] = []
 
   for (let i = 0; i < chars.length; i++) {
-    const { char, state } = chars[i]
+    const { char, state, typedChar } = chars[i]
 
     // Detect paragraph break: \n followed by \n
     if (char === '\n' && i + 1 < chars.length && chars[i + 1].char === '\n') {
-      // Push the newline char as a visual element in current paragraph
-      current.push({ idx: i, char, state, isCursor: i === cursorPosition })
+      current.push({ idx: i, char, state, isCursor: i === cursorPosition, typedChar })
       if (current.length > 0) {
         paragraphs.push(current)
         current = []
@@ -146,12 +208,12 @@ function buildParagraphs(
       i++
       // Also push the second newline if it's the cursor position
       if (i === cursorPosition) {
-        current.push({ idx: i, char: chars[i].char, state: chars[i].state, isCursor: true })
+        current.push({ idx: i, char: chars[i].char, state: chars[i].state, isCursor: true, typedChar: chars[i].typedChar })
       }
       continue
     }
 
-    current.push({ idx: i, char, state, isCursor: i === cursorPosition })
+    current.push({ idx: i, char, state, isCursor: i === cursorPosition, typedChar })
 
     // Single newline at end of text or not followed by another newline
     if (char === '\n' && (i + 1 >= chars.length || chars[i + 1].char !== '\n')) {

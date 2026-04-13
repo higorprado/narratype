@@ -9,6 +9,7 @@ export type CharState = (typeof CharState)[keyof typeof CharState]
 export interface TypingChar {
   char: string
   state: CharState
+  typedChar?: string
 }
 
 export interface TypingPage {

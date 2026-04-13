@@ -1,4 +1,4 @@
-import { useReducer, useCallback } from 'react'
+import { useReducer, useCallback, useRef, useEffect } from 'react'
 import { CharState } from '@/types'
 import type { TypingChar, TypingStats } from '@/types'
 import { compareChars } from '@/utils/charComparator'
@@ -49,8 +49,10 @@ function createInitialState(text: string): TypingState {
   }
 }
 
-function createReducer(options: TypingEngineOptions) {
+function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
   return function reducer(state: TypingState, action: Action): TypingState {
+    const options = optionsRef.current ?? {}
+
     switch (action.type) {
       case 'RESET':
         return createInitialState(action.text)
@@ -126,12 +128,16 @@ function createReducer(options: TypingEngineOptions) {
 
         // Stop cursor after mistype: mark incorrect but don't advance
         if (charResult === CharState.INCORRECT && options.stopCursorAfterMistype) {
-          newChars[cursor] = { ...newChars[cursor], state: CharState.INCORRECT }
+          newChars[cursor] = { ...newChars[cursor], state: CharState.INCORRECT, typedChar }
           return { ...state, chars: newChars, startTime }
         }
 
         // Normal: mark character and advance
-        newChars[cursor] = { ...newChars[cursor], state: charResult }
+        newChars[cursor] = {
+          ...newChars[cursor],
+          state: charResult,
+          typedChar: charResult === CharState.INCORRECT ? typedChar : undefined,
+        }
         let newPos = cursor + 1
 
         // Skip punctuation if enabled
@@ -158,7 +164,13 @@ function createReducer(options: TypingEngineOptions) {
 }
 
 export function useTypingEngine(text: string, options: TypingEngineOptions = {}) {
-  const reducer = createReducer(options)
+  // Store options in a ref so the reducer always reads current values
+  const optionsRef = useRef(options)
+  useEffect(() => {
+    optionsRef.current = options
+  })
+
+  const reducer = createReducer(optionsRef)
   const [state, dispatch] = useReducer(reducer, text, createInitialState)
 
   const handleKeyPress = useCallback(

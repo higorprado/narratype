@@ -8,6 +8,9 @@ interface CharSpanProps {
   state: CharStateType
   isCursor: boolean
   cursorStyle?: string
+  smoothCursor?: boolean
+  showLiteralMistypes?: boolean
+  typedChar?: string
 }
 
 const stateClassMap: Record<CharStateType, string> = {
@@ -22,14 +25,25 @@ function getDisplay(char: string): { text: string; isSpecial: boolean } {
 }
 
 const CharSpan = forwardRef<HTMLSpanElement, CharSpanProps>(
-  function CharSpan({ char, state, isCursor, cursorStyle }, ref) {
-    const { text, isSpecial } = getDisplay(char)
+  function CharSpan({ char, state, isCursor, cursorStyle, smoothCursor, showLiteralMistypes, typedChar }, ref) {
+    // When showLiteralMistypes is on and the char is incorrect, show what was actually typed
+    const displayChar = (showLiteralMistypes && state === CharState.INCORRECT && typedChar)
+      ? typedChar
+      : char
+    const { text, isSpecial } = getDisplay(displayChar)
+
+    // Map cursor style to CSS class. BOX maps to cursor-box; others map to cursor-{lowercase}.
+    let cursorClass = ''
+    if (isCursor) {
+      const styleKey = cursorStyle ? cursorStyle.toLowerCase() : 'box'
+      cursorClass = styles[`cursor-${styleKey}`] ?? styles['cursor-box'] ?? ''
+    }
 
     const classNames = [
       styles.char,
       stateClassMap[state],
-      isCursor ? styles.cursor : '',
-      isCursor && cursorStyle ? styles[`cursor-${cursorStyle.toLowerCase()}`] ?? '' : '',
+      cursorClass,
+      smoothCursor ? styles.smoothCursor : '',
       isSpecial ? styles.special : '',
     ]
       .filter(Boolean)
