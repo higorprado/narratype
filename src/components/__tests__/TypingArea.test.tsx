@@ -78,4 +78,25 @@ describe('TypingArea', () => {
 
     expect(onStatsUpdate).toHaveBeenCalled()
   })
+
+  it('handles dead key followed by space as the base character', () => {
+    render(<TypingArea text="a'b" />)
+    const area = screen.getByTestId('typing-area')
+
+    // Type 'a' normally first
+    fireEvent.keyDown(area, { key: 'a' })
+
+    const spansAfterA = screen.getAllByTestId('char-span')
+    expect(spansAfterA[0].className).toContain('correct')
+
+    // Simulate dead key ' then space
+    fireEvent.keyDown(area, { key: 'Dead', code: 'Quote' })
+    fireEvent.keyDown(area, { key: ' ' })
+
+    const spans = screen.getAllByTestId('char-span')
+    // After 'a' and dead+' → space, cursor should be at index 2 (the 'b')
+    // The apostrophe at index 1 should be correct
+    expect(spans[1].textContent).toBe("'")
+    expect(spans[1].className).toContain('correct')
+  })
 })

@@ -1,4 +1,4 @@
-export type { Book, BookSlug, Chapter, Page } from './book'
+export type { Book, BookSlug, Chapter, Page, ImportedBookMeta, ImportedChapter } from './book'
 export { CharState, type TypingChar, type TypingPage, type TypingStats } from './typing'
 export {
   type Settings,

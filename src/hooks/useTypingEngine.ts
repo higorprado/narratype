@@ -3,12 +3,20 @@ import { CharState } from '@/types'
 import type { TypingChar, TypingStats } from '@/types'
 import { compareChars } from '@/utils/charComparator'
 import { calculateStats } from '@/utils/stats'
+import type { SavedTypingSession } from '@/utils/typingSessionStorage'
 
 export interface TypingEngineOptions {
   stopCursorAfterMistype?: boolean
   ignoreCapitalization?: boolean
   skipPunctuation?: boolean
   internationalMode?: boolean
+}
+
+export interface TypingEngineRestore {
+  savedSession: SavedTypingSession | null
+  bookSlug: string
+  chapterIndex: number
+  pageIndex: number
 }
 
 interface TypingState {
@@ -21,7 +29,7 @@ interface TypingState {
 type Action =
   | { type: 'KEY_PRESS'; key: string }
   | { type: 'RESET'; text: string }
-
+  | { type: 'RESTORE'; text: string; session: SavedTypingSession }
 const PUNCTUATION_CHARS = new Set([
   '.', ',', ';', ':', '!', '?', '"', "'",
   '(', ')', '[', ']', '{', '}', '-',
@@ -57,6 +65,18 @@ function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
       case 'RESET':
         return createInitialState(action.text)
 
+      case 'RESTORE': {
+        const chars = action.text.split('').map((char, i) => ({
+          char,
+          state: action.session.charStates[i] ?? CharState.UNTYPED,
+        }))
+        return {
+          chars,
+          cursorPosition: action.session.cursorPosition,
+          startTime: action.session.startTime,
+          isComplete: action.session.cursorPosition >= chars.length,
+        }
+      }
       case 'KEY_PRESS': {
         const key = action.key
 
@@ -163,7 +183,11 @@ function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
   }
 }
 
-export function useTypingEngine(text: string, options: TypingEngineOptions = {}) {
+export function useTypingEngine(
+  text: string,
+  options: TypingEngineOptions = {},
+  restore?: TypingEngineRestore,
+) {
   // Store options in a ref so the reducer always reads current values
   const optionsRef = useRef(options)
   useEffect(() => {
@@ -172,6 +196,13 @@ export function useTypingEngine(text: string, options: TypingEngineOptions = {})
 
   const reducer = createReducer(optionsRef)
   const [state, dispatch] = useReducer(reducer, text, createInitialState)
+
+  // Restore from saved session when restore context is provided
+  useEffect(() => {
+    if (restore?.savedSession) {
+      dispatch({ type: 'RESTORE', text, session: restore.savedSession })
+    }
+  }, []) // Only on mount — eslint-disable-line react-hooks/exhaustive-deps
 
   const handleKeyPress = useCallback(
     (key: string) => {
@@ -185,15 +216,18 @@ export function useTypingEngine(text: string, options: TypingEngineOptions = {})
   }, [text, dispatch])
 
   const getStats = useCallback((): TypingStats => {
-    const correctChars = state.chars.filter((c) => c.state === CharState.CORRECT).length
-    const totalTypedChars = state.chars.filter(
-      (c) => c.state === CharState.CORRECT || c.state === CharState.INCORRECT,
-    ).length
+    let correct = 0
+    let typed = 0
+    const chars = state.chars
+    for (let i = 0; i < chars.length; i++) {
+      const s = chars[i].state
+      if (s === CharState.CORRECT) { correct++; typed++ }
+      else if (s === CharState.INCORRECT) { typed++ }
+    }
     const elapsedMs = state.startTime ? Date.now() - state.startTime : 0
-
     return calculateStats({
-      correctChars,
-      totalTypedChars,
+      correctChars: correct,
+      totalTypedChars: typed,
       elapsedMs,
     })
   }, [state.chars, state.startTime])

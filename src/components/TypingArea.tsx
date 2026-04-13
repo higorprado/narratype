@@ -1,8 +1,12 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { useTypingEngine } from '@/hooks/useTypingEngine'
-import type { TypingEngineOptions } from '@/hooks/useTypingEngine'
+import type { TypingEngineOptions, TypingEngineRestore } from '@/hooks/useTypingEngine'
 import { CharState } from '@/types'
 import type { TypingStats, CursorStyle, StatsUpdateFrequency } from '@/types'
+import {
+  saveTypingSession,
+  clearTypingSession,
+} from '@/utils/typingSessionStorage'
 import CharSpan from './CharSpan'
 import styles from './TypingArea.module.css'
 
@@ -17,6 +21,7 @@ interface TypingAreaProps {
   readingMode?: boolean
   showLiteralMistypes?: boolean
   statsUpdateFrequency?: StatsUpdateFrequency
+  sessionRestore?: TypingEngineRestore
 }
 
 export default function TypingArea({
@@ -30,6 +35,7 @@ export default function TypingArea({
   readingMode = false,
   showLiteralMistypes = false,
   statsUpdateFrequency = 'word',
+  sessionRestore,
 }: TypingAreaProps) {
   const {
     chars,
@@ -38,14 +44,24 @@ export default function TypingArea({
     startTime,
     handleKeyPress,
     getStats,
-  } = useTypingEngine(text, options)
-
+  } = useTypingEngine(text, options, sessionRestore)
   const containerRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLSpanElement>(null)
   const prevCompleteRef = useRef(false)
   const [isFocused, setIsFocused] = useState(false)
 
   const lastStatsPosRef = useRef(-1)
+
+  // Dead key tracking: on international keyboards (ABNT2, US-Intl, etc.), pressing
+  // ' sends key='Dead'. We store the physical key code, then when the user
+  // presses space (to produce standalone ') we process it.
+  const deadKeyRef = useRef<string | null>(null)
+
+  // Map physical key codes to their dead-key base character
+  const DEAD_KEY_MAP: Record<string, string> = {
+    Quote: "'",
+    Backquote: '`',
+  }
 
   // Capture keyboard input (disabled in reading mode)
   const handleKeyDown = useCallback(
@@ -54,6 +70,27 @@ export default function TypingArea({
       if (e.key === ' ' || e.key === 'Backspace' || e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault()
       }
+
+      // Handle dead key: store the base char and wait for next key
+      if (e.key === 'Dead') {
+        const base = DEAD_KEY_MAP[e.code]
+        if (base) deadKeyRef.current = base
+        return
+      }
+
+      // If a dead key was pending, check if this completes it
+      if (deadKeyRef.current !== null) {
+        const base = deadKeyRef.current
+        deadKeyRef.current = null
+        // Space after dead key → produce the standalone dead character
+        if (e.key === ' ') {
+          handleKeyPress(base)
+          return
+        }
+        // Any other key: the OS composes them, but keydown still fires with the
+        // raw key. Let it fall through to normal processing.
+      }
+
       handleKeyPress(e.key)
     },
     [handleKeyPress, readingMode],
@@ -70,11 +107,14 @@ export default function TypingArea({
     el.addEventListener('keydown', handleKeyDown)
     return () => el.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
-
-  // Auto-scroll to keep cursor visible
+  // Auto-scroll: only when cursor leaves the viewport. Uses instant scroll to
+  // avoid animation pileup during rapid typing (e.g. holding Backspace).
   useEffect(() => {
-    if (autoScroll && cursorRef.current) {
-      cursorRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    if (!autoScroll || !cursorRef.current) return
+    const rect = cursorRef.current.getBoundingClientRect()
+    const inView = rect.top >= 0 && rect.bottom <= window.innerHeight
+    if (!inView) {
+      cursorRef.current.scrollIntoView({ block: 'nearest', behavior: 'instant' })
     }
   }, [cursorPosition, autoScroll])
 
@@ -121,6 +161,79 @@ export default function TypingArea({
       prevCompleteRef.current = false
     }
   }, [isComplete, onComplete])
+
+  // --- Session persistence ---
+  // Debounced save (500ms) + visibilitychange/beforeunload for immediate save
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latestStateRef = useRef({ cursorPosition, chars, startTime })
+  latestStateRef.current = { cursorPosition, chars, startTime }
+
+  const hasSession = sessionRestore?.bookSlug != null
+
+  // Clear saved session on complete
+  useEffect(() => {
+    if (isComplete && hasSession) {
+      clearTypingSession(
+        sessionRestore!.bookSlug,
+        sessionRestore!.chapterIndex,
+        sessionRestore!.pageIndex,
+      )
+    }
+  }, [isComplete, hasSession]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Debounced save on every cursor position change
+  useEffect(() => {
+    if (!hasSession || isComplete) return
+    if (cursorPosition === 0 && startTime === null) return // nothing typed yet
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      const { cursorPosition: cp, chars: ch, startTime: st } = latestStateRef.current
+      saveTypingSession(
+        sessionRestore!.bookSlug,
+        sessionRestore!.chapterIndex,
+        sessionRestore!.pageIndex,
+        cp,
+        ch.map((c) => c.state),
+        st,
+        text,
+      )
+    }, 2000)
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [cursorPosition, hasSession, isComplete]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Immediate save on visibility change (tab hidden) and beforeunload
+  useEffect(() => {
+    if (!hasSession) return
+
+    function flush() {
+      const { cursorPosition: cp, chars: ch, startTime: st } = latestStateRef.current
+      if (cp === 0 && st === null) return
+      saveTypingSession(
+        sessionRestore!.bookSlug,
+        sessionRestore!.chapterIndex,
+        sessionRestore!.pageIndex,
+        cp,
+        ch.map((c) => c.state),
+        st,
+        text,
+      )
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush()
+    }
+    const onBeforeUnload = () => flush()
+
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('beforeunload', onBeforeUnload)
+    }
+  }, [hasSession]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Build paragraph groups from chars, splitting on double newlines
   // In reading mode, render all chars as CORRECT
