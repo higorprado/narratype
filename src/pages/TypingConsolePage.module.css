@@ -240,11 +240,17 @@
 }
 
 
-.floatingSettingsButton {
+.floatingNav {
   position: fixed;
   bottom: 1rem;
   right: 1rem;
   z-index: 10;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.floatingNavButton {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -258,10 +264,54 @@
   cursor: pointer;
   opacity: 0.35;
   transition: opacity 0.2s, color 0.2s, border-color 0.2s;
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
-.floatingSettingsButton:hover {
+.floatingNavButton:hover:not(:disabled) {
   opacity: 1;
   color: var(--color-text);
   border-color: var(--color-text-muted);
+}
+
+.floatingNavButton:disabled {
+  opacity: 0.15;
+  cursor: not-allowed;
+}
+
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.confirmDialog {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirmDialog p {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.confirmSubtext {
+  font-size: 0.85rem !important;
+  color: var(--color-text-muted) !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
 }

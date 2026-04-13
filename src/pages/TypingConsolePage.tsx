@@ -8,7 +8,7 @@ import TypingArea from '@/components/TypingArea'
 import SettingsModal from '@/components/SettingsModal'
 import { useProgress } from '@/context/ProgressContext'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { loadTypingSession, clearTypingSession } from '@/utils/typingSessionStorage'
+import { loadTypingSession, clearChapterSessions } from '@/utils/typingSessionStorage'
 import type { TypingEngineRestore } from '@/hooks/useTypingEngine'
 import styles from './TypingConsolePage.module.css'
 export default function TypingConsolePage() {
@@ -17,8 +17,10 @@ export default function TypingConsolePage() {
   const [stats, setStats] = useState<TypingStats | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [restartKey, setRestartKey] = useState(0)
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false)
   const { settings } = useSettings()
-  const { markPageComplete, setLastPage } = useProgress()
+  const { markPageComplete, setLastPage, resetChapterProgress } = useProgress()
 
   const chapterIndex = Number(chapterIdx)
   const pageIndex = Number(pageIdx)
@@ -81,10 +83,24 @@ export default function TypingConsolePage() {
     (newPageIdx: number) => {
       if (!bookSlug) return
       setIsCompleted(false)
+      setStats(null)
+      setSavedSession(null)
       navigate(`/typing-console/${bookSlug}/${chapterIndex}/${newPageIdx}`)
     },
     [navigate, bookSlug, chapterIndex],
   )
+
+  const isFirstPage = chapterIndex === 0 && pageIndex === 0
+  const isLastPage = pageIndex >= totalPages - 1
+
+  // Auto-advance to next page on completion
+  useEffect(() => {
+    if (!isCompleted || !settings.autoAdvancePage || isLastPage) return
+    const timer = setTimeout(() => {
+      goToPage(pageIndex + 1)
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [isCompleted, settings.autoAdvancePage, isLastPage, goToPage, pageIndex])
 
   // Error state: invalid params
   if (!book) {
@@ -110,9 +126,6 @@ export default function TypingConsolePage() {
       </div>
     )
   }
-
-  const isFirstPage = chapterIndex === 0 && pageIndex === 0
-  const isLastPage = pageIndex >= totalPages - 1
 
   return (
     <div className={styles.page}>
@@ -147,7 +160,7 @@ export default function TypingConsolePage() {
       <main className={styles.main}>
         <div className={`${styles.typingWrapper} ${isCompleted ? styles.completed : ''}`}>
           <TypingArea
-            key={`${bookSlug}-${chapterIndex}-${pageIndex}`}
+            key={`${bookSlug}-${chapterIndex}-${pageIndex}-${restartKey}`}
             text={page.text}
             options={{
               stopCursorAfterMistype: settings.stopCursorAfterMistype,
@@ -183,15 +196,7 @@ export default function TypingConsolePage() {
         <footer className={styles.footer}>
           <button
             className={styles.button}
-            onClick={() => {
-              setStats(null)
-              setIsCompleted(false)
-              setSavedSession(null)
-              if (bookSlug) {
-                clearTypingSession(bookSlug, chapterIndex, pageIndex)
-              }
-              navigate(`/typing-console/${bookSlug}/${chapterIndex}/${pageIndex}`)
-            }}
+            onClick={() => setShowRestartConfirm(true)}
           >
             Restart
           </button>
@@ -215,16 +220,75 @@ export default function TypingConsolePage() {
       )}
 
       {settings.hideUI && (
-        <button
-          className={styles.floatingSettingsButton}
-          onClick={() => setSettingsOpen(true)}
-          aria-label="Open settings"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-        </button>
+        <div className={styles.floatingNav}>
+          <button
+            className={styles.floatingNavButton}
+            onClick={() => goToPage(pageIndex - 1)}
+            disabled={isFirstPage}
+            aria-label="Previous page"
+          >
+            ←
+          </button>
+          <button
+            className={styles.floatingNavButton}
+            onClick={() => goToPage(pageIndex + 1)}
+            disabled={isLastPage}
+            aria-label="Next page"
+          >
+            →
+          </button>
+          <button
+            className={styles.floatingNavButton}
+            onClick={() => setShowRestartConfirm(true)}
+            aria-label="Restart"
+          >
+            ↺
+          </button>
+          <button
+            className={styles.floatingNavButton}
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Open settings"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {showRestartConfirm && (
+        <div className={styles.confirmOverlay} onClick={() => setShowRestartConfirm(false)}>
+          <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
+            <p>Restart this chapter from the beginning?</p>
+            <p className={styles.confirmSubtext}>All progress for this chapter will be lost.</p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.button}
+                onClick={() => setShowRestartConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.button}
+                onClick={() => {
+                  if (bookSlug) {
+                    clearChapterSessions(bookSlug, chapterIndex, totalPages)
+                    resetChapterProgress(bookSlug, chapterIndex)
+                  }
+                  setStats(null)
+                  setIsCompleted(false)
+                  setSavedSession(null)
+                  setShowRestartConfirm(false)
+                  setRestartKey((k) => k + 1)
+                  goToPage(0)
+                }}
+              >
+                Restart
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />

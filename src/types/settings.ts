@@ -51,6 +51,7 @@ export interface Settings {
   stopCursorAfterMistype: boolean
   showLiteralMistypes: boolean
   hideUI: boolean
+  autoAdvancePage: boolean
   autoScroll: boolean
   virtualKeyboard: boolean
   statsUpdateFrequency: StatsUpdateFrequency
@@ -68,6 +69,7 @@ export const DEFAULT_SETTINGS: Settings = {
   stopCursorAfterMistype: false,
   showLiteralMistypes: false,
   hideUI: false,
+  autoAdvancePage: true,
   autoScroll: true,
   virtualKeyboard: false,
   statsUpdateFrequency: 'word',

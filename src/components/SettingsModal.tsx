@@ -62,6 +62,7 @@ const BOOLEAN_KEYS: { key: keyof Settings; label: string }[] = [
   { key: 'stopCursorAfterMistype', label: 'Stop Cursor After Mistype' },
   { key: 'showLiteralMistypes', label: 'Show Literal Mistypes' },
   { key: 'hideUI', label: 'Hide UI' },
+  { key: 'autoAdvancePage', label: 'Auto-Advance Page' },
   { key: 'autoScroll', label: 'Auto-Scroll' },
 ]
 

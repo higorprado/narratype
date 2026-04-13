@@ -21,6 +21,7 @@ interface ProgressContextValue {
   markPageComplete: (bookSlug: string, chapterIndex: number, pageIndex: number) => void
   getLastPage: (bookSlug: string) => PageProgress | null
   setLastPage: (bookSlug: string, chapterIndex: number, pageIndex: number) => void
+  resetChapterProgress: (bookSlug: string, chapterIndex: number) => void
   getBookCompletionPercent: (bookSlug: string) => number
   isPageComplete: (bookSlug: string, chapterIndex: number, pageIndex: number) => boolean
   getRecentBooks: () => Array<{ bookSlug: string; lastAccessed: number }>
@@ -29,6 +30,7 @@ interface ProgressContextValue {
 type ProgressAction =
   | { type: 'MARK_PAGE_COMPLETE'; bookSlug: string; chapterIndex: number; pageIndex: number }
   | { type: 'SET_LAST_PAGE'; bookSlug: string; chapterIndex: number; pageIndex: number }
+  | { type: 'RESET_CHAPTER'; bookSlug: string; chapterIndex: number }
 
 const STORAGE_KEY = 'narratype-progress'
 
@@ -84,6 +86,19 @@ function progressReducer(state: ProgressMap, action: ProgressAction): ProgressMa
       }
       return next
     }
+    case 'RESET_CHAPTER': {
+      const { bookSlug, chapterIndex } = action
+      const bookProg = state[bookSlug]
+      if (!bookProg) return state
+      const { [chapterIndex]: _, ...restChapters } = bookProg.chapters
+      return {
+        ...state,
+        [bookSlug]: {
+          ...bookProg,
+          chapters: restChapters,
+        },
+      }
+    }
     default:
       return state
   }
@@ -118,6 +133,13 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const setLastPage = useCallback(
     (bookSlug: string, chapterIndex: number, pageIndex: number) => {
       dispatch({ type: 'SET_LAST_PAGE', bookSlug, chapterIndex, pageIndex })
+    },
+    [],
+  )
+
+  const resetChapterProgress = useCallback(
+    (bookSlug: string, chapterIndex: number) => {
+      dispatch({ type: 'RESET_CHAPTER', bookSlug, chapterIndex })
     },
     [],
   )
@@ -163,6 +185,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         markPageComplete,
         getLastPage,
         setLastPage,
+        resetChapterProgress,
         getBookCompletionPercent,
         isPageComplete,
         getRecentBooks,

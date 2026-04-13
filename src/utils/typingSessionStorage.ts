@@ -81,3 +81,14 @@ export function clearTypingSession(
     // Ignore
   }
 }
+
+
+export function clearChapterSessions(
+  bookSlug: string,
+  chapterIndex: number,
+  pageCount: number,
+): void {
+  for (let i = 0; i < pageCount; i++) {
+    clearTypingSession(bookSlug, chapterIndex, i)
+  }
+}
