@@ -65,7 +65,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: 'classic-dark',
+  theme: 'catppuccin-mocha',
   font: 'literata',
   cursorStyle: 'BOX',
   smoothCursor: true,

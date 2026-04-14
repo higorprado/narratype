@@ -28,7 +28,7 @@ describe('SettingsContext', () => {
       </SettingsProvider>,
     )
 
-    expect(screen.getByTestId('theme')).toHaveTextContent('classic-dark')
+    expect(screen.getByTestId('theme')).toHaveTextContent('catppuccin-mocha')
   })
 
   it('updateSetting changes the value', () => {
@@ -98,7 +98,7 @@ describe('SettingsContext', () => {
     expect(screen.getByTestId('theme')).toHaveTextContent('ocean')
 
     act(() => screen.getByText('reset').click())
-    expect(screen.getByTestId('theme')).toHaveTextContent('classic-dark')
+    expect(screen.getByTestId('theme')).toHaveTextContent('catppuccin-mocha')
   })
 
   it('loads saved settings from localStorage on mount', () => {

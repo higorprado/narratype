@@ -12,9 +12,9 @@ describe('useTheme', () => {
   it('updates data-theme when theme changes', () => {
     const { rerender } = renderHook(
       ({ theme }: { theme: ThemeName }) => useTheme(theme),
-      { initialProps: { theme: 'classic-dark' as ThemeName } },
+      { initialProps: { theme: 'catppuccin-mocha' as ThemeName } },
     )
-    expect(document.documentElement.getAttribute('data-theme')).toBe('classic-dark')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('catppuccin-mocha')
 
     rerender({ theme: 'pulse' as ThemeName })
     expect(document.documentElement.getAttribute('data-theme')).toBe('pulse')

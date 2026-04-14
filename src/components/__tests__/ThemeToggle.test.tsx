@@ -47,7 +47,7 @@ describe('ThemeToggle', () => {
   it('shows Dark label when theme is light', () => {
     localStorage.setItem(
       'narratype-settings',
-      JSON.stringify({ theme: 'classic-light' }),
+      JSON.stringify({ theme: 'catppuccin-latte' }),
     )
     renderWithProviders(<ThemeToggle />)
     expect(screen.getByText('Dark')).toBeInTheDocument()

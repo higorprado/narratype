@@ -47,7 +47,7 @@ describe('SettingsModal', () => {
     renderModal(true)
 
     await user.click(screen.getByRole('button', { name: 'Themes' }))
-    expect(screen.getByText('classic-dark')).toBeInTheDocument()
+    expect(screen.getByText('catppuccin-mocha')).toBeInTheDocument()
     expect(screen.getByText('ocean')).toBeInTheDocument()
   })
 

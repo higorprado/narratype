@@ -82,4 +82,4 @@ src/
 
 ## License
 
-Private project.
+MIT License. See [LICENSE](LICENSE).

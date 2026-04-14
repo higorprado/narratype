@@ -3,10 +3,10 @@ import styles from './ThemeToggle.module.css'
 
 export function ThemeToggle() {
   const { settings, updateSetting } = useSettings()
-  const isDark = settings.theme === 'classic-dark'
+  const isDark = settings.theme === 'catppuccin-mocha'
 
   const toggle = () => {
-    updateSetting('theme', isDark ? 'classic-light' : 'classic-dark')
+    updateSetting('theme', isDark ? 'catppuccin-latte' : 'catppuccin-mocha')
   }
 
   return (

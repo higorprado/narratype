@@ -27,7 +27,7 @@ function loadSettings(): Settings {
   }
   // No stored settings — detect system preference
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  return { ...DEFAULT_SETTINGS, theme: prefersDark ? 'classic-dark' : 'classic-light' }
+  return { ...DEFAULT_SETTINGS, theme: prefersDark ? 'catppuccin-mocha' : 'catppuccin-latte' }
 }
 
 function settingsReducer(state: Settings, action: SettingsAction): Settings {
