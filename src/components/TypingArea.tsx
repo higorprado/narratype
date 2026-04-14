@@ -124,7 +124,6 @@ export default function TypingArea({
     },
     [handleKeyPress, readingMode],
   )
-
   // Auto-focus the typing area on mount
   useEffect(() => {
     containerRef.current?.focus()
@@ -186,6 +185,25 @@ export default function TypingArea({
       wpm: calculateWPM(charStats.correctChars, elapsedMs),
     }
   }, [getStats, statsAcc])
+
+  const handleBlur = useCallback(() => {
+    setIsFocused(false)
+    if (startTime === null || isComplete || isIdleRef.current) return
+
+    const pauseTime = lastKeystrokeTimeRef.current ?? Date.now()
+    statsAcc.onPause(pauseTime)
+
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current)
+      inactivityTimerRef.current = null
+    }
+
+    isIdleRef.current = true
+    const frozenStats = buildFullStatsAtTime(pauseTime)
+    onStatsUpdate?.(frozenStats)
+    onInactivity?.()
+  }, [startTime, isComplete, statsAcc, buildFullStatsAtTime, onStatsUpdate, onInactivity])
+
   // Stats reporting controlled by statsUpdateFrequency
   const shouldReportStats = useCallback(
     (pos: number): boolean => {
@@ -401,7 +419,7 @@ export default function TypingArea({
       role={readingMode ? undefined : 'textbox'}
       aria-label="Typing area"
       onFocus={() => setIsFocused(true)}
-      onBlur={() => setIsFocused(false)}
+      onBlur={handleBlur}
     >
       {showOverlay && (
         <div
