@@ -1,3 +1,5 @@
+import { useSettings } from '@/context/SettingsContext'
+
 import { useState, useEffect, useCallback } from 'react'
 import type { Book } from '@/types/book'
 import {
@@ -7,6 +9,7 @@ import {
   importedBookToBook,
 } from '@/storage/importedBooks'
 import { importEpub } from '@/utils/epubImporter'
+import { importPdf } from '@/utils/pdfImporter'
 import { registerImportedBooks } from '@/data'
 
 export type ImportStatus = 'idle' | 'loading' | 'success' | 'error'
@@ -15,12 +18,13 @@ export interface ImportedBooksState {
   books: Book[]
   importStatus: ImportStatus
   importError: string | null
-  importBook: (file: File) => Promise<void>
+  importBook: (file: File, options?: { wordsPerChapter?: number }) => Promise<void>
   deleteBook: (bookId: string) => Promise<void>
   refresh: () => Promise<void>
 }
 
 export function useImportedBooks(): ImportedBooksState {
+  const { settings } = useSettings()
   const [books, setBooks] = useState<Book[]>([])
   const [importStatus, setImportStatus] = useState<ImportStatus>('idle')
   const [importError, setImportError] = useState<string | null>(null)
@@ -43,17 +47,20 @@ export function useImportedBooks(): ImportedBooksState {
   }, [refresh])
 
   const importBook = useCallback(
-    async (file: File) => {
+    async (file: File, options?: { wordsPerChapter?: number }) => {
       setImportStatus('loading')
       setImportError(null)
       try {
-        const result = await importEpub(file)
+        const ext = file.name.split('.').pop()?.toLowerCase()
+        const result = ext === 'pdf'
+          ? await importPdf(file, options?.wordsPerChapter ?? settings.pdfWordsPerChapter)
+          : await importEpub(file)
         await saveImportedBook(result.meta, result.chapters)
         await refresh()
         setImportStatus('success')
       } catch (err) {
         setImportStatus('error')
-        setImportError(err instanceof Error ? err.message : 'Failed to import EPUB')
+        setImportError(err instanceof Error ? err.message : 'Failed to import book')
       }
     },
     [refresh],

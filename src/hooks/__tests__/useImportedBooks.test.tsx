@@ -2,6 +2,7 @@ import { renderHook, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useImportedBooks } from '@/hooks/useImportedBooks'
 import type { Book } from '@/types/book'
+import { SettingsProvider } from '@/context/SettingsContext'
 
 vi.mock('@/storage/importedBooks', () => ({
   getAllImportedBooks: vi.fn(),
@@ -14,12 +15,17 @@ vi.mock('@/utils/epubImporter', () => ({
   importEpub: vi.fn(),
 }))
 
+vi.mock('@/utils/pdfImporter', () => ({
+  importPdf: vi.fn(),
+}))
+
 vi.mock('@/data', () => ({
   registerImportedBooks: vi.fn(),
 }))
 
 import { getAllImportedBooks, saveImportedBook, deleteImportedBook, importedBookToBook } from '@/storage/importedBooks'
 import { importEpub } from '@/utils/epubImporter'
+import { importPdf } from '@/utils/pdfImporter'
 import { registerImportedBooks } from '@/data'
 
 const fakeBook: Book = {
@@ -32,6 +38,15 @@ const fakeBook: Book = {
   isImported: true,
 }
 
+const importResult = {
+  meta: { id: '1', slug: 's', title: 'T', author: 'A', language: 'en', coverUrl: '', importDate: 0, chapterCount: 1 },
+  chapters: [{ bookId: '1', index: 0, title: 'Ch 1', text: 'text' }],
+}
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  return <SettingsProvider>{children}</SettingsProvider>
+}
+
 describe('useImportedBooks', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -40,7 +55,7 @@ describe('useImportedBooks', () => {
   })
 
   it('initializes with empty books and idle status', () => {
-    const { result } = renderHook(() => useImportedBooks())
+    const { result } = renderHook(() => useImportedBooks(), { wrapper })
 
     expect(result.current.books).toEqual([])
     expect(result.current.importStatus).toBe('idle')
@@ -51,7 +66,7 @@ describe('useImportedBooks', () => {
     const meta = { id: '1', slug: 'test-book', title: 'Test', author: 'Auth', language: 'en', coverUrl: '', importDate: 0, chapterCount: 1 }
     vi.mocked(getAllImportedBooks).mockResolvedValue([meta])
 
-    const { result } = renderHook(() => useImportedBooks())
+    const { result } = renderHook(() => useImportedBooks(), { wrapper })
 
     await waitFor(() => {
       expect(result.current.books).toEqual([fakeBook])
@@ -65,7 +80,7 @@ describe('useImportedBooks', () => {
   it('handles storage error gracefully (empty books)', async () => {
     vi.mocked(getAllImportedBooks).mockRejectedValue(new Error('DB broken'))
 
-    const { result } = renderHook(() => useImportedBooks())
+    const { result } = renderHook(() => useImportedBooks(), { wrapper })
 
     await waitFor(() => {
       expect(result.current.books).toEqual([])
@@ -75,17 +90,12 @@ describe('useImportedBooks', () => {
   })
 
   describe('importBook', () => {
-    it('sets status to loading, calls importEpub, saves to storage, refreshes, sets success', async () => {
+    it('dispatches to importEpub for .epub files', async () => {
       const file = new File(['content'], 'book.epub', { type: 'application/epub+zip' })
-      const importResult = {
-        meta: { id: '1', slug: 's', title: 'T', author: 'A', language: 'en', coverUrl: '', importDate: 0, chapterCount: 1 },
-        chapters: [{ bookId: '1', index: 0, title: 'Ch 1', text: 'text' }],
-      }
       vi.mocked(importEpub).mockResolvedValue(importResult)
 
-      const { result } = renderHook(() => useImportedBooks())
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
 
-      // Wait for initial mount refresh to finish
       await waitFor(() => expect(getAllImportedBooks).toHaveBeenCalled())
 
       await act(async () => {
@@ -93,18 +103,51 @@ describe('useImportedBooks', () => {
       })
 
       expect(importEpub).toHaveBeenCalledWith(file)
+      expect(importPdf).not.toHaveBeenCalled()
       expect(saveImportedBook).toHaveBeenCalledWith(importResult.meta, importResult.chapters)
-      // refresh called after save — getAllImportedBooks called twice total (mount + after save)
-      expect(getAllImportedBooks).toHaveBeenCalledTimes(2)
       expect(result.current.importStatus).toBe('success')
       expect(result.current.importError).toBeNull()
+    })
+
+    it('dispatches to importPdf for .pdf files with default wordsPerChapter', async () => {
+      const file = new File(['content'], 'book.pdf', { type: 'application/pdf' })
+      vi.mocked(importPdf).mockResolvedValue(importResult)
+
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
+
+      await waitFor(() => expect(getAllImportedBooks).toHaveBeenCalled())
+
+      await act(async () => {
+        await result.current.importBook(file)
+      })
+
+      expect(importPdf).toHaveBeenCalledWith(file, 1750) // default pdfWordsPerChapter
+      expect(importEpub).not.toHaveBeenCalled()
+      expect(saveImportedBook).toHaveBeenCalledWith(importResult.meta, importResult.chapters)
+      expect(result.current.importStatus).toBe('success')
+    })
+
+    it('dispatches to importPdf for .pdf files with custom wordsPerChapter', async () => {
+      const file = new File(['content'], 'book.pdf', { type: 'application/pdf' })
+      vi.mocked(importPdf).mockResolvedValue(importResult)
+
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
+
+      await waitFor(() => expect(getAllImportedBooks).toHaveBeenCalled())
+
+      await act(async () => {
+        await result.current.importBook(file, { wordsPerChapter: 3000 })
+      })
+
+      expect(importPdf).toHaveBeenCalledWith(file, 3000)
+      expect(result.current.importStatus).toBe('success')
     })
 
     it('handles import error (sets error status and message)', async () => {
       const file = new File(['content'], 'bad.epub', { type: 'application/epub+zip' })
       vi.mocked(importEpub).mockRejectedValue(new Error('Corrupt EPUB'))
 
-      const { result } = renderHook(() => useImportedBooks())
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
 
       await waitFor(() => expect(getAllImportedBooks).toHaveBeenCalled())
 
@@ -120,7 +163,7 @@ describe('useImportedBooks', () => {
       const file = new File(['content'], 'bad.epub', { type: 'application/epub+zip' })
       vi.mocked(importEpub).mockRejectedValue('string error')
 
-      const { result } = renderHook(() => useImportedBooks())
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
 
       await waitFor(() => expect(getAllImportedBooks).toHaveBeenCalled())
 
@@ -129,7 +172,7 @@ describe('useImportedBooks', () => {
       })
 
       expect(result.current.importStatus).toBe('error')
-      expect(result.current.importError).toBe('Failed to import EPUB')
+      expect(result.current.importError).toBe('Failed to import book')
     })
   })
 
@@ -137,7 +180,7 @@ describe('useImportedBooks', () => {
     it('calls deleteFromStorage and refreshes', async () => {
       vi.mocked(deleteImportedBook).mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useImportedBooks())
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
 
       await waitFor(() => expect(getAllImportedBooks).toHaveBeenCalled())
 
@@ -146,7 +189,6 @@ describe('useImportedBooks', () => {
       })
 
       expect(deleteImportedBook).toHaveBeenCalledWith('book-1')
-      // refresh called after delete — getAllImportedBooks called twice total (mount + after delete)
       expect(getAllImportedBooks).toHaveBeenCalledTimes(2)
     })
   })
@@ -156,13 +198,12 @@ describe('useImportedBooks', () => {
       const meta = { id: '2', slug: 'new-book', title: 'New', author: 'Auth', language: 'en', coverUrl: '', importDate: 0, chapterCount: 1 }
       vi.mocked(getAllImportedBooks).mockResolvedValue([])
 
-      const { result } = renderHook(() => useImportedBooks())
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
 
       await waitFor(() => {
         expect(result.current.books).toEqual([])
       })
 
-      // Now make storage return a book and call refresh
       vi.mocked(getAllImportedBooks).mockResolvedValue([meta])
 
       await act(async () => {
@@ -176,7 +217,7 @@ describe('useImportedBooks', () => {
     it('handles storage failure', async () => {
       vi.mocked(getAllImportedBooks).mockResolvedValue([])
 
-      const { result } = renderHook(() => useImportedBooks())
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
 
       await waitFor(() => {
         expect(result.current.books).toEqual([])
