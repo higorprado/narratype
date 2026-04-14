@@ -15,7 +15,7 @@ interface UseSessionPersistenceOptions {
   chapterIndex: number
   pageIndex: number
   text: string
-  getElapsedMs: () => number
+  getActiveElapsedMs: () => number
 }
 
 export function useSessionPersistence({
@@ -28,16 +28,16 @@ export function useSessionPersistence({
   chapterIndex,
   pageIndex,
   text,
-  getElapsedMs,
+  getActiveElapsedMs,
 }: UseSessionPersistenceOptions) {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const latestStateRef = useRef({ cursorPosition, chars, startTime, getElapsedMs })
-  latestStateRef.current = { cursorPosition, chars, startTime, getElapsedMs }
+  const latestStateRef = useRef({ cursorPosition, chars, startTime, getActiveElapsedMs })
+  latestStateRef.current = { cursorPosition, chars, startTime, getActiveElapsedMs }
 
   const flush = useCallback(() => {
-    const { cursorPosition: cp, chars: ch, startTime: st, getElapsedMs: gElapsed } = latestStateRef.current
+    const { cursorPosition: cp, chars: ch, startTime: st, getActiveElapsedMs: gActiveElapsed } = latestStateRef.current
     if (cp === 0 && st === null) return
-    saveTypingSession(bookSlug, chapterIndex, pageIndex, cp, ch.map((c) => c.state), st, gElapsed(), text)
+    saveTypingSession(bookSlug, chapterIndex, pageIndex, cp, ch.map((c) => c.state), st, gActiveElapsed(), text)
   }, [bookSlug, chapterIndex, pageIndex, text])
 
   // Clear saved session on complete
@@ -55,10 +55,12 @@ export function useSessionPersistence({
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(() => {
       flush()
+      saveTimerRef.current = null
     }, 2000)
     return () => {
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
         flush()
       }
     }

@@ -5,6 +5,10 @@ interface StatsAccumulatorState {
   totalTimeMs: number
   sessionChars: number
   sessionStartTime: number | null
+  // Elapsed time captured at the last keystroke or deletion.
+  // Used by session persistence to avoid saving inflated elapsedMs
+  // that includes idle time after the last keystroke.
+  activeElapsedMs: number
 }
 
 const initialState = (): StatsAccumulatorState => ({
@@ -12,6 +16,7 @@ const initialState = (): StatsAccumulatorState => ({
   totalTimeMs: 0,
   sessionChars: 0,
   sessionStartTime: null,
+  activeElapsedMs: 0,
 })
 
 export function useStatsAccumulator() {
@@ -24,12 +29,14 @@ export function useStatsAccumulator() {
     } else {
       state.current.sessionChars++
     }
+    state.current.activeElapsedMs = getElapsedMs()
   }
 
   const onCharDeleted = () => {
     if (state.current.sessionChars > 0) {
       state.current.sessionChars--
     }
+    state.current.activeElapsedMs = getElapsedMs()
   }
 
   const onPause = (lastKeystrokeTime: number) => {
@@ -39,6 +46,7 @@ export function useStatsAccumulator() {
       state.current.sessionChars = 0
       state.current.sessionStartTime = null
     }
+    state.current.activeElapsedMs = state.current.totalTimeMs
   }
 
   const restore = (totalChars: number, totalTimeMs: number) => {
@@ -46,6 +54,7 @@ export function useStatsAccumulator() {
     state.current.totalTimeMs = totalTimeMs
     state.current.sessionChars = 0
     state.current.sessionStartTime = null
+    state.current.activeElapsedMs = totalTimeMs
   }
   const reset = () => {
     state.current = initialState()
@@ -63,5 +72,9 @@ export function useStatsAccumulator() {
   const isSessionActive = (): boolean =>
     state.current.sessionStartTime !== null
 
-  return { onCharTyped, onCharDeleted, onPause, restore, reset, getElapsedMs, getElapsedMsAtTime, getAllChars, isSessionActive }
+  const getActiveElapsedMs = (): number =>
+    state.current.activeElapsedMs
+
+
+  return { onCharTyped, onCharDeleted, onPause, restore, reset, getElapsedMs, getElapsedMsAtTime, getActiveElapsedMs, getAllChars, isSessionActive }
 }

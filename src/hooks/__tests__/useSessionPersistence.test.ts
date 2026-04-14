@@ -29,7 +29,7 @@ const baseOpts = {
   chapterIndex: 0,
   pageIndex: 0,
   text: 'abc',
-  getElapsedMs: () => 0,
+  getActiveElapsedMs: () => 0,
 }
 
 describe('useSessionPersistence', () => {
@@ -168,17 +168,17 @@ describe('useSessionPersistence', () => {
   })
 
 
-  it('calls getElapsedMs during flush and passes result to saveTypingSession', () => {
-    const getElapsedMs = vi.fn().mockReturnValue(5000)
+  it('calls getActiveElapsedMs during flush and passes result to saveTypingSession', () => {
+    const getActiveElapsedMs = vi.fn().mockReturnValue(5000)
     const { result } = renderHook(() =>
-      useSessionPersistence({ ...baseOpts, cursorPosition: 1, startTime: 1000, getElapsedMs }),
+      useSessionPersistence({ ...baseOpts, cursorPosition: 1, startTime: 1000, getActiveElapsedMs }),
     )
 
     act(() => {
       result.current.flush()
     })
 
-    expect(getElapsedMs).toHaveBeenCalled()
+    expect(getActiveElapsedMs).toHaveBeenCalled()
     expect(mockSave).toHaveBeenCalledWith(
       'test-book', 0, 0, 1,
       [CharState.UNTYPED, CharState.UNTYPED, CharState.UNTYPED],

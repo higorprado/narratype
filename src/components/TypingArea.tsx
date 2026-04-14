@@ -77,7 +77,7 @@ export default function TypingArea({
     chapterIndex: sessionRestore?.chapterIndex ?? 0,
     pageIndex: sessionRestore?.pageIndex ?? 0,
     text,
-    getElapsedMs: statsAcc.getElapsedMs,
+    getActiveElapsedMs: statsAcc.getActiveElapsedMs,
   })
   const containerRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLSpanElement>(null)
