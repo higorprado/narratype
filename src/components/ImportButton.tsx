@@ -24,7 +24,7 @@ export default function ImportButton({ onImport, status, error }: ImportButtonPr
       // Reset input so the same file can be re-selected
       if (inputRef.current) inputRef.current.value = ''
 
-      const ext = file.name.split('.').pop()?.toLowerCase()
+      const ext = file.name.includes('.') ? file.name.split('.').pop()?.toLowerCase() : ''
       if (ext === 'pdf') {
         setPendingPdf(file)
         setShowConfig(true)

@@ -91,6 +91,58 @@ describe('SettingsModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('switches theme when ocean swatch is clicked', async () => {
+    const user = userEvent.setup()
+    renderModal(true)
+
+    await user.click(screen.getByRole('button', { name: 'Themes' }))
+    const oceanBtn = screen.getByRole('button', { name: /Aa ocean/ })
+
+    // Default theme is classic-dark; ocean swatch should not be active yet
+    expect(oceanBtn.className).not.toContain('themeSwatchActive')
+
+    await user.click(oceanBtn)
+    expect(oceanBtn.className).toContain('themeSwatchActive')
+  })
+
+  it('switches font when fira-code is clicked', async () => {
+    const user = userEvent.setup()
+    renderModal(true)
+
+    await user.click(screen.getByRole('button', { name: 'Fonts' }))
+    const firaBtn = screen.getByRole('button', { name: /^fira-code / })
+
+    // Default font is literata; fira-code should not be active yet
+    expect(firaBtn.className).not.toContain('fontItemActive')
+
+    await user.click(firaBtn)
+    expect(firaBtn.className).toContain('fontItemActive')
+  })
+
+  it('updates cursor style via select', async () => {
+    const user = userEvent.setup()
+    renderModal(true)
+
+    const select = screen.getByLabelText('Cursor Style') as HTMLSelectElement
+    expect(select.value).toBe('BOX')
+
+    await user.selectOptions(select, 'LINE')
+    expect(select.value).toBe('LINE')
+  })
+
+  it('updates stats frequency to page', async () => {
+    const user = userEvent.setup()
+    renderModal(true)
+
+    // Default is 'word'; find the 'page' radio and click it
+    const pageRadio = screen.getByRole('radio', { name: /page/i }) as HTMLInputElement
+    expect(pageRadio.checked).toBe(false)
+
+    await user.click(pageRadio)
+    expect(pageRadio.checked).toBe(true)
+  })
+
+
   it('reset button restores defaults', async () => {
     const user = userEvent.setup()
 

@@ -63,7 +63,7 @@ export function useImportedBooks(): ImportedBooksState {
         setImportError(err instanceof Error ? err.message : 'Failed to import book')
       }
     },
-    [refresh],
+    [refresh, settings.pdfWordsPerChapter],
   )
 
   const deleteBook = useCallback(

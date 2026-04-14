@@ -28,4 +28,9 @@ describe('HomePage', () => {
     renderWithRouter(<HomePage />)
 
   })
+
+  it('does not show delete dialog by default', () => {
+    renderWithRouter(<HomePage />)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
 })

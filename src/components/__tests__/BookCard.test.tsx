@@ -58,4 +58,30 @@ describe('BookCard', () => {
 
     expect(link).toHaveAttribute('href', '/chapters/test-book')
   })
+  it('does not show delete button for non-imported books', () => {
+    renderWithRouter(<BookCard book={mockBook} />)
+    expect(screen.queryByLabelText(/Delete/)).not.toBeInTheDocument()
+  })
+
+  it('does not show delete button when onDelete is not provided', () => {
+    const importedBook: Book = { ...mockBook, isImported: true }
+    renderWithRouter(<BookCard book={importedBook} />)
+    expect(screen.queryByLabelText(/Delete/)).not.toBeInTheDocument()
+  })
+
+  it('shows delete button for imported books when onDelete is provided', () => {
+    const onDelete = vi.fn()
+    const importedBook: Book = { ...mockBook, isImported: true }
+    renderWithRouter(<BookCard book={importedBook} onDelete={onDelete} />)
+    expect(screen.getByLabelText('Delete Test Book Title')).toBeInTheDocument()
+  })
+
+  it('calls onDelete when delete button is clicked', async () => {
+    const onDelete = vi.fn()
+    const importedBook: Book = { ...mockBook, isImported: true }
+    renderWithRouter(<BookCard book={importedBook} onDelete={onDelete} />)
+
+    await userEvent.setup().click(screen.getByLabelText('Delete Test Book Title'))
+    expect(onDelete).toHaveBeenCalledWith('test-book')
+  })
 })

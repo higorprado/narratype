@@ -34,7 +34,7 @@ function withTransaction<T>(
         const tx = db.transaction(stores, mode)
         tx.oncomplete = () => resolve(undefined as T)
         tx.onerror = () => reject(tx.error)
-        fn(tx).then(resolve).catch(reject)
+        fn(tx).catch(reject)
       }),
   )
 }
@@ -127,14 +127,18 @@ export async function deleteImportedBook(bookId: string): Promise<void> {
     tx.objectStore(BOOKS_STORE).delete(bookId)
     // Delete all chapters for this book
     const chapterStore = tx.objectStore(CHAPTERS_STORE)
-    const request = chapterStore.getAll()
-    request.onsuccess = () => {
-      const all = request.result as ImportedChapter[]
-      for (const ch of all) {
-        if (ch.bookId === bookId) {
-          chapterStore.delete([ch.bookId, ch.index])
+    await new Promise<void>((resolve, reject) => {
+      const request = chapterStore.getAll()
+      request.onsuccess = () => {
+        const all = request.result as ImportedChapter[]
+        for (const ch of all) {
+          if (ch.bookId === bookId) {
+            chapterStore.delete([ch.bookId, ch.index])
+          }
         }
+        resolve()
       }
-    }
+      request.onerror = () => reject(request.error)
+    })
   })
 }

@@ -191,4 +191,36 @@ describe('TypingArea', () => {
   })
 
 
+  it('reading mode marks all chars as correct', () => {
+    render(<TypingArea text="abc" readingMode={true} />)
+    const spans = screen.getAllByTestId('char-span')
+    expect(spans).toHaveLength(3)
+    for (const span of spans) {
+      expect(span.className).toContain('correct')
+    }
+  })
+
+  it('reading mode hides cursor overlay and has no tabIndex', () => {
+    render(<TypingArea text="abc" readingMode={true} />)
+    const area = screen.getByTestId('typing-area')
+    // No overlay div (cursor hidden)
+    expect(area.querySelector(':scope > div')).toBeNull()
+    // tabIndex should be undefined in reading mode
+    expect(area.getAttribute('tabindex')).toBeNull()
+  })
+
+  it('statsUpdateFrequency=page only reports stats on completion', () => {
+    const onStatsUpdate = vi.fn()
+    render(<TypingArea text="ab" onStatsUpdate={onStatsUpdate} statsUpdateFrequency="page" />)
+    const area = screen.getByTestId('typing-area')
+
+    // Type first char — stats should NOT fire
+    fireEvent.keyDown(area, { key: 'a' })
+    expect(onStatsUpdate).not.toHaveBeenCalled()
+
+    // Type second char (completing) — stats SHOULD fire
+    fireEvent.keyDown(area, { key: 'b' })
+    expect(onStatsUpdate).toHaveBeenCalledTimes(1)
+  })
+
 })

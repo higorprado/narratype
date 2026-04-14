@@ -4,9 +4,10 @@ import styles from './BookList.module.css'
 
 interface BookListProps {
   books: Book[]
+  onDelete?: (bookId: string) => void
 }
 
-export default function BookList({ books }: BookListProps) {
+export default function BookList({ books, onDelete }: BookListProps) {
   if (books.length === 0) {
     return <p className={styles.empty}>No books available yet.</p>
   }
@@ -15,7 +16,7 @@ export default function BookList({ books }: BookListProps) {
     <ul className={styles.grid}>
       {books.map((book) => (
         <li key={book.slug}>
-          <BookCard book={book} />
+          <BookCard book={book} onDelete={onDelete} />
         </li>
       ))}
     </ul>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compareChars } from '../charComparator'
+import { compareChars, isPunctuation, shouldSkipPunctuation } from '../charComparator'
 import { CharState } from '@/types'
 
 describe('compareChars', () => {
@@ -58,5 +58,49 @@ describe('compareChars', () => {
     it('should apply ignoreCapitalization and skipPunctuation together', () => {
       expect(compareChars('a', 'A', { ignoreCapitalization: true, skipPunctuation: true })).toBe(CharState.CORRECT)
     })
+  })
+})
+
+
+describe('isPunctuation', () => {
+  it('returns true for common punctuation', () => {
+    const chars = ['.', ',', ';', ':', '!', '?', '"', "'", '(', ')', '-', '\u2014', '\u2013']
+    for (const ch of chars) {
+      expect(isPunctuation(ch)).toBe(true)
+    }
+  })
+
+  it('returns false for letters', () => {
+    expect(isPunctuation('a')).toBe(false)
+    expect(isPunctuation('Z')).toBe(false)
+  })
+
+  it('returns false for digits', () => {
+    expect(isPunctuation('1')).toBe(false)
+  })
+
+  it('returns false for space', () => {
+    expect(isPunctuation(' ')).toBe(false)
+  })
+
+  it('returns false for empty string', () => {
+    expect(isPunctuation('')).toBe(false)
+  })
+})
+
+describe('shouldSkipPunctuation', () => {
+  it('returns true for punctuation characters', () => {
+    const chars = ['.', ',', ';', ':', '!', '?', '"', "'", '(', ')', '-', '\u2014', '\u2013']
+    for (const ch of chars) {
+      expect(shouldSkipPunctuation(ch)).toBe(true)
+    }
+  })
+
+  it('returns false for non-punctuation characters', () => {
+    expect(shouldSkipPunctuation('a')).toBe(false)
+    expect(shouldSkipPunctuation('Z')).toBe(false)
+    expect(shouldSkipPunctuation('1')).toBe(false)
+    expect(shouldSkipPunctuation(' ')).toBe(false)
+    expect(shouldSkipPunctuation('')).toBe(false)
   })
 })
