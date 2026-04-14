@@ -6,6 +6,7 @@ import { SettingsProvider } from '@/context/SettingsContext'
 
 vi.mock('@/storage/importedBooks', () => ({
   getAllImportedBooks: vi.fn(),
+  getImportedBook: vi.fn(),
   saveImportedBook: vi.fn(),
   deleteImportedBook: vi.fn(),
   importedBookToBook: vi.fn(),
@@ -23,7 +24,7 @@ vi.mock('@/data', () => ({
   registerImportedBooks: vi.fn(),
 }))
 
-import { getAllImportedBooks, saveImportedBook, deleteImportedBook, importedBookToBook } from '@/storage/importedBooks'
+import { getAllImportedBooks, getImportedBook, saveImportedBook, deleteImportedBook, importedBookToBook } from '@/storage/importedBooks'
 import { importEpub } from '@/utils/epubImporter'
 import { importPdf } from '@/utils/pdfImporter'
 import { registerImportedBooks } from '@/data'
@@ -177,7 +178,8 @@ describe('useImportedBooks', () => {
   })
 
   describe('deleteBook', () => {
-    it('calls deleteFromStorage and refreshes', async () => {
+    it('looks up by slug, deletes by id, and refreshes', async () => {
+      vi.mocked(getImportedBook).mockResolvedValue({ id: 'storage-id', slug: 'book-1', title: 'T', author: 'A', language: 'en', coverUrl: '', importDate: 0, chapterCount: 1 })
       vi.mocked(deleteImportedBook).mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useImportedBooks(), { wrapper })
@@ -188,7 +190,8 @@ describe('useImportedBooks', () => {
         await result.current.deleteBook('book-1')
       })
 
-      expect(deleteImportedBook).toHaveBeenCalledWith('book-1')
+      expect(getImportedBook).toHaveBeenCalledWith('book-1')
+      expect(deleteImportedBook).toHaveBeenCalledWith('storage-id')
       expect(getAllImportedBooks).toHaveBeenCalledTimes(2)
     })
   })

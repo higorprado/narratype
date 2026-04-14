@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Book } from '@/types/book'
 import {
   getAllImportedBooks,
+  getImportedBook,
   saveImportedBook,
   deleteImportedBook as deleteFromStorage,
   importedBookToBook,
@@ -67,9 +68,12 @@ export function useImportedBooks(): ImportedBooksState {
   )
 
   const deleteBook = useCallback(
-    async (bookId: string) => {
-      await deleteFromStorage(bookId)
-      await refresh()
+    async (bookSlug: string) => {
+      const meta = await getImportedBook(bookSlug)
+      if (meta) {
+        await deleteFromStorage(meta.id)
+        await refresh()
+      }
     },
     [refresh],
   )
