@@ -39,9 +39,11 @@ const CHAR_REPLACEMENTS: ReadonlyMap<string, string> = new Map([
   ['\u00F6', 'o'],  // ö → o
   ['\u00D6', 'O'],  // Ö → O
   ['\u00B4', "'"],  // ´ (acute accent) → '
+  ['\u2014', '-'],  // — (em-dash) → -
+  ['\u2013', '-'],  // – (en-dash) → -
 ])
 
-const CHAR_PATTERN = /[\u016D\u016C\u0153\u0152\u00A7\u2026\u00B0\u00FC\u00DC\u00E9\u00C9\u00F4\u00D4\u00F6\u00D6\u00B4]/g
+const CHAR_PATTERN = /[\u016D\u016C\u0153\u0152\u00A7\u2026\u00B0\u00FC\u00DC\u00E9\u00C9\u00F4\u00D4\u00F6\u00D6\u00B4\u2014\u2013]/g
 
 function normalizeChars(text: string): string {
   return text.replace(CHAR_PATTERN, (ch) => CHAR_REPLACEMENTS.get(ch) ?? ch)

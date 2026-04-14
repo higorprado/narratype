@@ -114,4 +114,17 @@ selected by the general for his temporary use.
     expect(normalizeBookText('\u00FCber')).toBe('uber')
     expect(normalizeBookText('r\u00F4le')).toBe('role')
   })
+
+  it('normalizes em-dash to hyphen', () => {
+    expect(normalizeBookText('before\u2014after')).toBe('before-after')
+  })
+
+  it('normalizes en-dash to hyphen', () => {
+    expect(normalizeBookText('pages 1\u201310')).toBe('pages 1-10')
+  })
+
+  it('normalizes mixed dashes in context', () => {
+    const input = 'He said\u2014 emphatically \u2014that pages 10\u201312 were missing\u2026'
+    expect(normalizeBookText(input)).toBe("He said- emphatically -that pages 10-12 were missing...")
+  })
 })
