@@ -20,6 +20,10 @@
   text-underline-offset: 3px;
 }
 
+.skipped {
+  color: var(--color-text);
+}
+
 /* Active cursor character: positioned above the overlay */
 .cursorActive {
   position: relative;

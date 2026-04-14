@@ -127,7 +127,7 @@ function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
           // Skip punctuation if enabled
           if (options.skipPunctuation) {
             while (newPos < newChars.length && PUNCTUATION_CHARS.has(newChars[newPos].char)) {
-              newChars[newPos] = { ...newChars[newPos], state: CharState.CORRECT }
+              newChars[newPos] = { ...newChars[newPos], state: CharState.SKIPPED }
               newPos++
             }
           }
@@ -170,7 +170,7 @@ function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
         // Skip punctuation if enabled
         if (options.skipPunctuation) {
           while (newPos < newChars.length && PUNCTUATION_CHARS.has(newChars[newPos].char)) {
-            newChars[newPos] = { ...newChars[newPos], state: CharState.CORRECT }
+            newChars[newPos] = { ...newChars[newPos], state: CharState.SKIPPED }
             newPos++
           }
         }
@@ -232,6 +232,7 @@ export function useTypingEngine(
       const s = chars[i].state
       if (s === CharState.CORRECT) { correct++; typed++ }
       else if (s === CharState.INCORRECT) { typed++ }
+      // SKIPPED chars are not counted — the user didn't type them
     }
     return {
       correctChars: correct,

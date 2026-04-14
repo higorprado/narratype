@@ -16,6 +16,7 @@ const stateClassMap: Record<CharStateType, string> = {
   [CharState.UNTYPED]: styles.untyped,
   [CharState.CORRECT]: styles.correct,
   [CharState.INCORRECT]: styles.incorrect,
+  [CharState.SKIPPED]: styles.skipped,
 }
 
 function getDisplay(char: string): { text: string; isSpecial: boolean } {

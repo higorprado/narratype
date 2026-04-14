@@ -87,6 +87,7 @@ export default function TypingArea({
 
   const lastStatsPosRef = useRef(-1)
   const prevCursorPosRef = useRef(0)
+  const prevCharsRef = useRef(chars)
 
   // Restore accumulator state from a saved session. The stats accumulator starts
   // at zero on every mount, so we must pre-populate it with historical data.
@@ -250,16 +251,28 @@ export default function TypingArea({
   // Track cursor changes in stats accumulator
   useEffect(() => {
     if (cursorPosition === prevCursorPosRef.current) return
-    const delta = cursorPosition - prevCursorPosRef.current
+    const oldPos = prevCursorPosRef.current
     prevCursorPosRef.current = cursorPosition
 
-    if (delta > 0) {
-      // Forward movement: could be multiple chars (skip punctuation, paragraph break)
-      for (let i = 0; i < delta; i++) statsAcc.onCharTyped()
-    } else if (delta < 0) {
-      statsAcc.onCharDeleted()
+    if (cursorPosition > oldPos) {
+      // Forward movement: count only non-SKIPPED chars
+      let typedCount = 0
+      for (let i = oldPos; i < cursorPosition; i++) {
+        if (chars[i].state !== CharState.SKIPPED) typedCount++
+      }
+      for (let i = 0; i < typedCount; i++) statsAcc.onCharTyped()
+    } else {
+      // Backspace: check if the erased char was user-typed (not SKIPPED)
+      // chars[cursorPosition] is already UNTYPED after backspace,
+      // so check the previous state from prevCharsRef
+      const prevChar = prevCharsRef.current[cursorPosition]
+      if (prevChar && prevChar.state !== CharState.SKIPPED) {
+        statsAcc.onCharDeleted()
+      }
     }
-  }, [cursorPosition, statsAcc])
+
+    prevCharsRef.current = chars
+  }, [cursorPosition, statsAcc, chars])
 
   // Fire onComplete once when page finishes
   useEffect(() => {

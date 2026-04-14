@@ -2,6 +2,7 @@ export const CharState = {
   UNTYPED: 'UNTYPED',
   CORRECT: 'CORRECT',
   INCORRECT: 'INCORRECT',
+  SKIPPED: 'SKIPPED',
 } as const
 
 export type CharState = (typeof CharState)[keyof typeof CharState]

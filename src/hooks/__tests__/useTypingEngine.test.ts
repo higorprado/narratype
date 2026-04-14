@@ -264,9 +264,9 @@ describe('useTypingEngine', () => {
         result.current.handleKeyPress('a')
       })
 
-      // After typing 'a', the '.' should be auto-skipped, cursor at 'b'
+      // After typing 'a', the '.' should be auto-skipped (SKIPPED), cursor at 'b'
       expect(result.current.chars[0].state).toBe(CharState.CORRECT)
-      expect(result.current.chars[1].state).toBe(CharState.CORRECT) // auto-corrected
+      expect(result.current.chars[1].state).toBe(CharState.SKIPPED) // auto-skipped
       expect(result.current.cursorPosition).toBe(2) // at 'b'
     })
   })
