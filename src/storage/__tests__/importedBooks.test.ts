@@ -8,6 +8,7 @@ import {
   importedBookToBook,
   saveImportedBook,
   deleteImportedBook,
+  updateImportedBook,
 } from '@/storage/importedBooks'
 import type { ImportedBookMeta, ImportedChapter } from '@/types/book'
 
@@ -193,5 +194,48 @@ describe('importedBooks storage', () => {
 
     const books = await getAllImportedBooks()
     expect(books).toHaveLength(0)
+  })
+
+  it('updateImportedBook updates title and regenerates slug', async () => {
+    const meta = makeMeta()
+    await saveImportedBook(meta, [])
+
+    await updateImportedBook('book-1', { title: 'Updated Title' })
+
+    const books = await getAllImportedBooks()
+    expect(books).toHaveLength(1)
+    expect(books[0].title).toBe('Updated Title')
+    expect(books[0].slug).toBe('updated-title-test-author')
+  })
+
+  it('updateImportedBook updates author and regenerates slug', async () => {
+    const meta = makeMeta()
+    await saveImportedBook(meta, [])
+
+    await updateImportedBook('book-1', { author: 'New Author' })
+
+    const books = await getAllImportedBooks()
+    expect(books).toHaveLength(1)
+    expect(books[0].author).toBe('New Author')
+    expect(books[0].slug).toBe('test-book-new-author')
+  })
+
+  it('updateImportedBook updates both title and author', async () => {
+    const meta = makeMeta()
+    await saveImportedBook(meta, [])
+
+    await updateImportedBook('book-1', { title: 'New Title', author: 'New Author' })
+
+    const books = await getAllImportedBooks()
+    expect(books).toHaveLength(1)
+    expect(books[0].title).toBe('New Title')
+    expect(books[0].author).toBe('New Author')
+    expect(books[0].slug).toBe('new-title-new-author')
+  })
+
+  it('updateImportedBook rejects for non-existent book', async () => {
+    await expect(
+      updateImportedBook('nonexistent', { title: 'X' }),
+    ).rejects.toThrow('Book not found: nonexistent')
   })
 })

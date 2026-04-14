@@ -3,18 +3,21 @@ import { getAllBooks } from '@/data'
 import BookList from '@/components/BookList'
 import ImportButton from '@/components/ImportButton'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import EditBookDialog from '@/components/EditBookDialog'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useImportedBooks } from '@/hooks/useImportedBooks'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
-  const { importStatus, importError, importBook, deleteBook } = useImportedBooks()
+  const { importStatus, importError, importBook, deleteBook, updateBook } = useImportedBooks()
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [pendingEditId, setPendingEditId] = useState<string | null>(null)
   // getAllBooks merges built-in + registered imported books
   const books = getAllBooks()
   useDocumentTitle('Narratype - Practice Typing with Classic Literature')
 
   const pendingDeleteBook = books.find((b) => b.slug === pendingDeleteId)
+  const pendingEditBook = books.find((b) => b.slug === pendingEditId)
 
   const handleDeleteRequest = useCallback((bookId: string) => {
     setPendingDeleteId(bookId)
@@ -31,6 +34,21 @@ export default function HomePage() {
     setPendingDeleteId(null)
   }, [])
 
+  const handleEditRequest = useCallback((bookId: string) => {
+    setPendingEditId(bookId)
+  }, [])
+
+  const handleEditSave = useCallback(async (updates: { title: string; author: string }) => {
+    if (pendingEditId) {
+      await updateBook(pendingEditId, updates)
+      setPendingEditId(null)
+    }
+  }, [pendingEditId, updateBook])
+
+  const handleEditCancel = useCallback(() => {
+    setPendingEditId(null)
+  }, [])
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -42,7 +60,7 @@ export default function HomePage() {
           status={importStatus}
           error={importError}
         />
-        <BookList books={books} onDelete={handleDeleteRequest} />
+        <BookList books={books} onDelete={handleDeleteRequest} onEdit={handleEditRequest} />
       </main>
       <ConfirmDialog
         isOpen={pendingDeleteId !== null}
@@ -51,6 +69,15 @@ export default function HomePage() {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
+      {pendingEditBook && (
+        <EditBookDialog
+          isOpen={pendingEditId !== null}
+          title={pendingEditBook.title}
+          author={pendingEditBook.author}
+          onSave={handleEditSave}
+          onCancel={handleEditCancel}
+        />
+      )}
     </div>
   )
 }

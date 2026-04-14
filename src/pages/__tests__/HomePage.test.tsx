@@ -33,4 +33,11 @@ describe('HomePage', () => {
     renderWithRouter(<HomePage />)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
+
+  it('does not show edit dialog by default', () => {
+    renderWithRouter(<HomePage />)
+    // EditBookDialog has role=dialog with label 'Edit Book'
+    const dialogs = screen.queryAllByRole('dialog')
+    expect(dialogs).toHaveLength(0)
+  })
 })

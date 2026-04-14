@@ -10,6 +10,7 @@ vi.mock('@/storage/importedBooks', () => ({
   saveImportedBook: vi.fn(),
   deleteImportedBook: vi.fn(),
   importedBookToBook: vi.fn(),
+  updateImportedBook: vi.fn(),
 }))
 
 vi.mock('@/utils/epubImporter', () => ({
@@ -24,7 +25,7 @@ vi.mock('@/data', () => ({
   registerImportedBooks: vi.fn(),
 }))
 
-import { getAllImportedBooks, getImportedBook, saveImportedBook, deleteImportedBook, importedBookToBook } from '@/storage/importedBooks'
+import { getAllImportedBooks, getImportedBook, saveImportedBook, deleteImportedBook, updateImportedBook, importedBookToBook } from '@/storage/importedBooks'
 import { importEpub } from '@/utils/epubImporter'
 import { importPdf } from '@/utils/pdfImporter'
 import { registerImportedBooks } from '@/data'
@@ -192,6 +193,25 @@ describe('useImportedBooks', () => {
 
       expect(getImportedBook).toHaveBeenCalledWith('book-1')
       expect(deleteImportedBook).toHaveBeenCalledWith('storage-id')
+      expect(getAllImportedBooks).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('updateBook', () => {
+    it('looks up by slug, updates by id, and refreshes', async () => {
+      vi.mocked(getImportedBook).mockResolvedValue({ id: 'storage-id', slug: 'book-1', title: 'T', author: 'A', language: 'en', coverUrl: '', importDate: 0, chapterCount: 1 })
+      vi.mocked(updateImportedBook).mockResolvedValue({ id: 'storage-id', slug: 'new-title-a', title: 'New Title', author: 'A', language: 'en', coverUrl: '', importDate: 0, chapterCount: 1 })
+
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
+
+      await waitFor(() => expect(getAllImportedBooks).toHaveBeenCalled())
+
+      await act(async () => {
+        await result.current.updateBook('book-1', { title: 'New Title', author: 'New Author' })
+      })
+
+      expect(getImportedBook).toHaveBeenCalledWith('book-1')
+      expect(updateImportedBook).toHaveBeenCalledWith('storage-id', { title: 'New Title', author: 'New Author' })
       expect(getAllImportedBooks).toHaveBeenCalledTimes(2)
     })
   })

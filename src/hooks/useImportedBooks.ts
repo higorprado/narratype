@@ -7,6 +7,7 @@ import {
   getImportedBook,
   saveImportedBook,
   deleteImportedBook as deleteFromStorage,
+  updateImportedBook as updateInStorage,
   importedBookToBook,
 } from '@/storage/importedBooks'
 import { importEpub } from '@/utils/epubImporter'
@@ -21,6 +22,7 @@ export interface ImportedBooksState {
   importError: string | null
   importBook: (file: File, options?: { wordsPerChapter?: number }) => Promise<void>
   deleteBook: (bookId: string) => Promise<void>
+  updateBook: (bookSlug: string, updates: { title: string; author: string }) => Promise<void>
   refresh: () => Promise<void>
 }
 
@@ -78,5 +80,16 @@ export function useImportedBooks(): ImportedBooksState {
     [refresh],
   )
 
-  return { books, importStatus, importError, importBook, deleteBook, refresh }
+  const updateBook = useCallback(
+    async (bookSlug: string, updates: { title: string; author: string }) => {
+      const meta = await getImportedBook(bookSlug)
+      if (meta) {
+        await updateInStorage(meta.id, updates)
+        await refresh()
+      }
+    },
+    [refresh],
+  )
+
+  return { books, importStatus, importError, importBook, deleteBook, updateBook, refresh }
 }

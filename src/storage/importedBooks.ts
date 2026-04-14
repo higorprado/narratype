@@ -1,4 +1,5 @@
 import type { ImportedBookMeta, ImportedChapter, Book } from '@/types/book'
+import { generateSlug } from '@/utils/slugify'
 
 const DB_NAME = 'narratype-imported'
 const DB_VERSION = 1
@@ -140,5 +141,30 @@ export async function deleteImportedBook(bookId: string): Promise<void> {
       }
       request.onerror = () => reject(request.error)
     })
+  })
+}
+
+export async function updateImportedBook(
+  id: string,
+  updates: { title?: string; author?: string },
+): Promise<ImportedBookMeta> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BOOKS_STORE, 'readwrite')
+    const store = tx.objectStore(BOOKS_STORE)
+    const request = store.get(id)
+    request.onsuccess = () => {
+      const meta = request.result as ImportedBookMeta | undefined
+      if (!meta) {
+        reject(new Error(`Book not found: ${id}`))
+        return
+      }
+      const updated = { ...meta, ...updates }
+      updated.slug = generateSlug(updated.title, updated.author)
+      store.put(updated)
+      tx.oncomplete = () => resolve(updated)
+      tx.onerror = () => reject(tx.error)
+    }
+    request.onerror = () => reject(request.error)
   })
 }
