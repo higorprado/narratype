@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getBookBySlug, getPage, getPageCount, getChapter } from '@/data'
 import type { TypingStats } from '@/types'
@@ -7,6 +7,7 @@ import StatsBar from '@/components/StatsBar'
 import TypingArea from '@/components/TypingArea'
 import SettingsModal from '@/components/SettingsModal'
 import { useProgress } from '@/context/ProgressContext'
+import { usePageNavigation } from '@/hooks/usePageNavigation'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { loadTypingSession, clearChapterSessions } from '@/utils/typingSessionStorage'
 import type { TypingEngineRestore } from '@/hooks/useTypingEngine'
@@ -19,7 +20,6 @@ export default function TypingConsolePage() {
   const [isCompleted, setIsCompleted] = useState(false)
   const [isInactive, setIsInactive] = useState(false)
   const [restartKey, setRestartKey] = useState(0)
-  const mainRef = useRef<HTMLElement>(null)
   const [showRestartConfirm, setShowRestartConfirm] = useState(false)
   const { settings } = useSettings()
   const { markPageComplete, setLastPage, resetChapterProgress } = useProgress()
@@ -88,43 +88,19 @@ export default function TypingConsolePage() {
     return () => document.removeEventListener('keydown', handleGlobalKeyDown)
   }, [bookSlug, navigate, settingsOpen])
 
-  const goToPage = useCallback(
-    (newPageIdx: number) => {
-      if (!bookSlug) return
+  const { goToPage, isFirstPage, isLastPage, mainRef } = usePageNavigation({
+    bookSlug,
+    chapterIndex,
+    pageIndex,
+    totalPages,
+    wordsPerPage: settings.wordsPerPage,
+    isCompleted,
+    autoAdvance: settings.autoAdvancePage,
+    onNavigate: useCallback(() => {
       setIsCompleted(false)
       setSavedSession(null)
-      navigate(`/typing-console/${bookSlug}/${chapterIndex}/${newPageIdx}`)
-    },
-    [navigate, bookSlug, chapterIndex],
-  )
-
-  const isFirstPage = chapterIndex === 0 && pageIndex === 0
-  const isLastPage = pageIndex >= totalPages - 1
-
-  // When wordsPerPage changes, page boundaries shift. If current pageIndex is
-  // out of bounds, navigate to page 0. Only fires on setting change, not initial mount.
-  const prevWordsPerPageRef = useRef(settings.wordsPerPage)
-  useEffect(() => {
-    if (prevWordsPerPageRef.current !== settings.wordsPerPage) {
-      prevWordsPerPageRef.current = settings.wordsPerPage
-      if (totalPages > 0 && pageIndex >= totalPages && bookSlug) {
-        goToPage(0)
-      }
-    }
-  }, [settings.wordsPerPage]) // eslint-disable-line react-hooks/exhaustive-deps
-  // Reset scroll when page changes (useLayoutEffect to prevent flash)
-  useLayoutEffect(() => {
-    if (mainRef.current) mainRef.current.scrollTop = 0
-  }, [pageIndex, chapterIndex])
-
-  // Auto-advance to next page on completion
-  useEffect(() => {
-    if (!isCompleted || !settings.autoAdvancePage || isLastPage) return
-    const timer = setTimeout(() => {
-      goToPage(pageIndex + 1)
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [isCompleted, settings.autoAdvancePage, isLastPage, goToPage, pageIndex])
+    }, []),
+  })
 
   // Error state: invalid params
   if (!book) {

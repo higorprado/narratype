@@ -5,10 +5,9 @@ import { useStatsAccumulator } from '@/hooks/useStatsAccumulator'
 import { CharState } from '@/types'
 import type { TypingStats, CursorStyle, StatsUpdateFrequency } from '@/types'
 import { calculateWPM } from '@/utils/stats'
-import {
-  saveTypingSession,
-  clearTypingSession,
-} from '@/utils/typingSessionStorage'
+import { useCursorOverlay } from '@/hooks/useCursorOverlay'
+import { useInactivityDetector } from '@/hooks/useInactivityDetector'
+import { useSessionPersistence } from '@/hooks/useSessionPersistence'
 import CharSpan from './CharSpan'
 import styles from './TypingArea.module.css'
 
@@ -67,19 +66,42 @@ export default function TypingArea({
     getStats,
   } = useTypingEngine(text, options, sessionRestore)
   const statsAcc = useStatsAccumulator()
+  const hasSession = sessionRestore?.bookSlug != null
+  const { flush: sessionFlush } = useSessionPersistence({
+    enabled: hasSession,
+    cursorPosition,
+    chars,
+    startTime,
+    isComplete,
+    bookSlug: sessionRestore?.bookSlug ?? '',
+    chapterIndex: sessionRestore?.chapterIndex ?? 0,
+    pageIndex: sessionRestore?.pageIndex ?? 0,
+    text,
+  })
   const containerRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLSpanElement>(null)
-  const overlayRef = useRef<HTMLDivElement>(null)
-  const prevCompleteRef = useRef(false)
   const [isFocused, setIsFocused] = useState(false)
+  const { overlayRef } = useCursorOverlay({ cursorRef, containerRef, cursorPosition, chars, isFocused, text })
+  const prevCompleteRef = useRef(false)
 
   const lastStatsPosRef = useRef(-1)
   const prevCursorPosRef = useRef(0)
 
   // Inactivity timeout tracking
-  const lastKeystrokeTimeRef = useRef<number | null>(null)
-  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const isIdleRef = useRef(false)
+  const { isIdleRef, lastKeystrokeTimeRef, handlePause: handleInactivityPause } = useInactivityDetector({
+    enabled: onInactivity != null,
+    triggerPosition: cursorPosition,
+    inactivityTimeoutSeconds: inactivityTimeout,
+    paused: startTime === null || isComplete,
+    onInactive: (lastKeystrokeTime) => {
+      statsAcc.onPause(lastKeystrokeTime)
+      const frozenStats = buildFullStatsAtTime(lastKeystrokeTime)
+      onStatsUpdate?.(frozenStats)
+      onInactivity?.()
+      if (sessionRestore?.bookSlug != null) sessionFlush()
+    },
+    onResume: () => onActivity?.(),
+  })
 
   // Dead key tracking: on international keyboards (ABNT2, US-Intl, etc.), pressing
   // ' sends key='Dead'. We store the physical key code, then when the user
@@ -149,22 +171,6 @@ export default function TypingArea({
     }
   }, [cursorPosition, autoScroll])
 
-  // Position the cursor overlay to match the active character's bounding rect
-  useEffect(() => {
-    const charEl = cursorRef.current
-    const container = containerRef.current
-    const overlay = overlayRef.current
-    if (!charEl || !container || !overlay) return
-
-    const charRect = charEl.getBoundingClientRect()
-    const containerRect = container.getBoundingClientRect()
-
-    overlay.style.left = `${charRect.left - containerRect.left}px`
-    overlay.style.top = `${charRect.top - containerRect.top}px`
-    overlay.style.width = `${charRect.width}px`
-    overlay.style.height = `${charRect.height}px`
-  }, [cursorPosition, chars, isFocused, text])
-
   // Build complete stats: char counts from engine, time from accumulator
   const buildFullStats = useCallback((): TypingStats => {
     const charStats = getStats()
@@ -193,16 +199,11 @@ export default function TypingArea({
     const pauseTime = lastKeystrokeTimeRef.current ?? Date.now()
     statsAcc.onPause(pauseTime)
 
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current)
-      inactivityTimerRef.current = null
-    }
-
-    isIdleRef.current = true
+    handleInactivityPause()
     const frozenStats = buildFullStatsAtTime(pauseTime)
     onStatsUpdate?.(frozenStats)
     onInactivity?.()
-  }, [startTime, isComplete, statsAcc, buildFullStatsAtTime, onStatsUpdate, onInactivity])
+  }, [startTime, isComplete, statsAcc, buildFullStatsAtTime, onStatsUpdate, onInactivity, isIdleRef, lastKeystrokeTimeRef, handleInactivityPause])
 
   // Stats reporting controlled by statsUpdateFrequency
   const shouldReportStats = useCallback(
@@ -247,52 +248,6 @@ export default function TypingArea({
     }
   }, [cursorPosition, statsAcc])
 
-  // Inactivity timeout: detect pauses and freeze stats
-  useEffect(() => {
-    if (startTime === null || isComplete) return
-    lastKeystrokeTimeRef.current = Date.now()
-
-    // If resuming from idle (IDLE -> TYPING), notify parent
-    if (isIdleRef.current) {
-      isIdleRef.current = false
-      onActivity?.()
-    }
-
-    // Restart inactivity timer
-    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current)
-    inactivityTimerRef.current = setTimeout(() => {
-      isIdleRef.current = true
-      // Freeze: accumulate session into totals, then compute stats
-      statsAcc.onPause(lastKeystrokeTimeRef.current!)
-      const frozenStats = buildFullStatsAtTime(lastKeystrokeTimeRef.current!)
-      onStatsUpdate?.(frozenStats)
-      onInactivity?.()
-
-      // Flush session save
-      if (sessionRestore?.bookSlug != null) {
-        const { cursorPosition: cp, chars: ch, startTime: st } = { cursorPosition, chars, startTime }
-        if (cp > 0 || st !== null) {
-          saveTypingSession(
-            sessionRestore.bookSlug,
-            sessionRestore.chapterIndex,
-            sessionRestore.pageIndex,
-            cp,
-            ch.map((c) => c.state),
-            st,
-            text,
-          )
-        }
-      }
-    }, inactivityTimeout * 1000)
-
-    return () => {
-      if (inactivityTimerRef.current) {
-        clearTimeout(inactivityTimerRef.current)
-        inactivityTimerRef.current = null
-      }
-    }
-  }, [cursorPosition]) // eslint-disable-line react-hooks/exhaustive-deps
-
   // Fire onComplete once when page finishes
   useEffect(() => {
     if (isComplete && !prevCompleteRef.current) {
@@ -303,93 +258,6 @@ export default function TypingArea({
       prevCompleteRef.current = false
     }
   }, [isComplete, onComplete])
-
-  // --- Session persistence ---
-  // Debounced save (500ms) + visibilitychange/beforeunload for immediate save
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const latestStateRef = useRef({ cursorPosition, chars, startTime })
-  latestStateRef.current = { cursorPosition, chars, startTime }
-
-  const hasSession = sessionRestore?.bookSlug != null
-
-  // Clear saved session on complete
-  useEffect(() => {
-    if (isComplete && hasSession) {
-      clearTypingSession(
-        sessionRestore!.bookSlug,
-        sessionRestore!.chapterIndex,
-        sessionRestore!.pageIndex,
-      )
-    }
-  }, [isComplete, hasSession]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Debounced save on every cursor position change
-  useEffect(() => {
-    if (!hasSession || isComplete) return
-    if (cursorPosition === 0 && startTime === null) return // nothing typed yet
-
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => {
-      const { cursorPosition: cp, chars: ch, startTime: st } = latestStateRef.current
-      saveTypingSession(
-        sessionRestore!.bookSlug,
-        sessionRestore!.chapterIndex,
-        sessionRestore!.pageIndex,
-        cp,
-        ch.map((c) => c.state),
-        st,
-        text,
-      )
-    }, 2000)
-    return () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current)
-        const { cursorPosition: cp, chars: ch, startTime: st } = latestStateRef.current
-        if (cp > 0 || st !== null) {
-          saveTypingSession(
-            sessionRestore!.bookSlug,
-            sessionRestore!.chapterIndex,
-            sessionRestore!.pageIndex,
-            cp,
-            ch.map((c) => c.state),
-            st,
-            text,
-          )
-        }
-      }
-    }
-  }, [cursorPosition, hasSession, isComplete]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Immediate save on visibility change (tab hidden) and beforeunload
-  useEffect(() => {
-    if (!hasSession) return
-
-    function flush() {
-      const { cursorPosition: cp, chars: ch, startTime: st } = latestStateRef.current
-      if (cp === 0 && st === null) return
-      saveTypingSession(
-        sessionRestore!.bookSlug,
-        sessionRestore!.chapterIndex,
-        sessionRestore!.pageIndex,
-        cp,
-        ch.map((c) => c.state),
-        st,
-        text,
-      )
-    }
-
-    const onVisibility = () => {
-      if (document.visibilityState === 'hidden') flush()
-    }
-    const onBeforeUnload = () => flush()
-
-    document.addEventListener('visibilitychange', onVisibility)
-    window.addEventListener('beforeunload', onBeforeUnload)
-    return () => {
-      document.removeEventListener('visibilitychange', onVisibility)
-      window.removeEventListener('beforeunload', onBeforeUnload)
-    }
-  }, [hasSession]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Build paragraph groups from chars, splitting on double newlines
   // In reading mode, render all chars as CORRECT
