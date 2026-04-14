@@ -71,12 +71,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<TabId>('functionality')
   const [localWordsPerPage, setLocalWordsPerPage] = useState(settings.wordsPerPage)
   const [localInactivityTimeout, setLocalInactivityTimeout] = useState(settings.inactivityTimeout)
+  const [localPdfPagesPerChapter, setLocalPdfPagesPerChapter] = useState(settings.pdfPagesPerChapter)
 
   // Sync from external settings changes (e.g. Reset Defaults)
   useEffect(() => {
     setLocalWordsPerPage(settings.wordsPerPage)
     setLocalInactivityTimeout(settings.inactivityTimeout)
-  }, [settings.wordsPerPage, settings.inactivityTimeout])
+    setLocalPdfPagesPerChapter(settings.pdfPagesPerChapter)
+  }, [settings.wordsPerPage, settings.inactivityTimeout, settings.pdfPagesPerChapter])
 
   const commitWordsPerPage = useCallback(() => {
     if (localWordsPerPage !== settings.wordsPerPage) {
@@ -89,6 +91,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       updateSetting('inactivityTimeout', localInactivityTimeout)
     }
   }, [localInactivityTimeout, settings.inactivityTimeout, updateSetting])
+
+  const commitPdfPagesPerChapter = useCallback(() => {
+    if (localPdfPagesPerChapter !== settings.pdfPagesPerChapter) {
+      updateSetting('pdfPagesPerChapter', localPdfPagesPerChapter)
+    }
+  }, [localPdfPagesPerChapter, settings.pdfPagesPerChapter, updateSetting])
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -205,6 +213,25 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               aria-label="Inactivity Timeout"
             />
             <span className={styles.sliderValue}>{localInactivityTimeout}s</span>
+          </div>
+        </div>
+
+        <div className={styles.sliderRow}>
+          <span className={styles.rowLabel}>PDF Pages per Chapter</span>
+          <div className={styles.sliderControl}>
+            <input
+              type="range"
+              className={styles.slider}
+              value={localPdfPagesPerChapter}
+              min={1}
+              max={50}
+              step={1}
+              onChange={(e) => setLocalPdfPagesPerChapter(parseInt(e.target.value, 10))}
+              onPointerUp={commitPdfPagesPerChapter}
+              onKeyUp={commitPdfPagesPerChapter}
+              aria-label="PDF Pages per Chapter"
+            />
+            <span className={styles.sliderValue}>{localPdfPagesPerChapter}</span>
           </div>
         </div>
       </>

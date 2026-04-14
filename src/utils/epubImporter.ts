@@ -1,6 +1,7 @@
 import { initEpubFile } from '@lingo-reader/epub-parser'
 import type { ImportedBookMeta, ImportedChapter } from '@/types/book'
 import { normalizeBookText } from '@/utils/textNormalizer'
+import { generateSlug } from '@/utils/slugify'
 
 export interface EpubImportResult {
   meta: ImportedBookMeta
@@ -41,15 +42,6 @@ export function htmlToPlainText(html: string): string {
     .replace(/ +(\n|$)/g, '$1')
 }
 
-/** Generate a URL-safe slug from title and author. */
-function generateSlug(title: string, author: string): string {
-  const raw = `${title} ${author}`
-  return raw
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 80)
-}
 
 /**
  * Import an EPUB file.

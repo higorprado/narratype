@@ -1,6 +1,6 @@
 import { getAllBooks } from '@/data'
 import BookList from '@/components/BookList'
-import EpubImportButton from '@/components/EpubImportButton'
+import ImportButton from '@/components/ImportButton'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useImportedBooks } from '@/hooks/useImportedBooks'
 import styles from './HomePage.module.css'
@@ -17,7 +17,7 @@ export default function HomePage() {
         <p className={styles.hero}>Practice typing by retyping classic literature</p>
       </header>
       <main className={styles.content}>
-        <EpubImportButton
+        <ImportButton
           onImport={importBook}
           status={importStatus}
           error={importError}

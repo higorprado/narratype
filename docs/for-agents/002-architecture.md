@@ -82,6 +82,7 @@ When the typing area loses focus:
 ## Imported Books
 
 - EPUB files parsed by `@lingo-reader/epub-parser` in `epubImporter.ts`.
+- PDF files parsed by `pdfjs-dist` in `pdfImporter.ts`. Text extracted per page, grouped into chapters by `pdfPagesPerChapter` setting.
 - Stored in IndexedDB (`narratype-imported` database, `books` and `chapters` object stores).
 - Registered in memory via `registerImportedBooks()` in `data/index.ts`.
 - Displayed alongside built-in books in the home page.

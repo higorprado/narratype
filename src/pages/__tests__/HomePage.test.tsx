@@ -1,10 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import HomePage from '../../pages/HomePage'
+import { SettingsProvider } from '@/context/SettingsContext'
 import { ProgressProvider } from '@/context/ProgressContext'
 
 function renderWithRouter(ui: React.ReactElement) {
-  return render(<MemoryRouter><ProgressProvider>{ui}</ProgressProvider></MemoryRouter>)
+  return render(<MemoryRouter><SettingsProvider><ProgressProvider>{ui}</ProgressProvider></SettingsProvider></MemoryRouter>)
 }
 
 describe('HomePage', () => {

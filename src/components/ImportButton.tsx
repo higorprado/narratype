@@ -1,14 +1,14 @@
 import { useRef, useCallback } from 'react'
 import type { ImportStatus } from '@/hooks/useImportedBooks'
-import styles from './EpubImportButton.module.css'
+import styles from './ImportButton.module.css'
 
-interface EpubImportButtonProps {
+interface ImportButtonProps {
   onImport: (file: File) => Promise<void>
   status: ImportStatus
   error: string | null
 }
 
-export default function EpubImportButton({ onImport, status, error }: EpubImportButtonProps) {
+export default function ImportButton({ onImport, status, error }: ImportButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleChange = useCallback(
@@ -31,17 +31,17 @@ export default function EpubImportButton({ onImport, status, error }: EpubImport
       <input
         ref={inputRef}
         type="file"
-        accept=".epub"
+        accept=".epub,.pdf"
         onChange={handleChange}
         className={styles.fileInput}
-        aria-label="Select EPUB file"
+        aria-label="Select book file"
       />
       <button
         className={styles.button}
         onClick={handleClick}
         disabled={status === 'loading'}
       >
-        {status === 'loading' ? 'Importing...' : 'Import EPUB'}
+        {status === 'loading' ? 'Importing...' : 'Import Book'}
       </button>
       {error && <p className={styles.error}>{error}</p>}
     </div>
