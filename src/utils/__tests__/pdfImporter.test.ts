@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockGetTextContent = vi.fn()
 const mockGetPage = vi.fn()
 const mockDestroy = vi.fn()
 const mockGetDocument = vi.fn()
@@ -27,7 +26,6 @@ function setupPdf(pageTexts: string[][]) {
   })
 
   mockGetPage.mockImplementation((pageNum: number) => {
-    // pdfjs uses 1-indexed pages
     const page = pages[pageNum - 1]
     if (!page) throw new Error(`Page ${pageNum} not found`)
     return Promise.resolve(page)
@@ -51,7 +49,7 @@ describe('importPdf', () => {
     setupPdf([['Hello world']])
 
     const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
-    const result = await importPdf(file)
+    const result = await importPdf(file, 100)
 
     expect(result.meta.title).toBe('test')
     expect(result.meta.author).toBe('Unknown Author')
@@ -61,36 +59,50 @@ describe('importPdf', () => {
     expect(mockDestroy).toHaveBeenCalled()
   })
 
-  it('groups pages into chapters based on pagesPerChapter', async () => {
+  it('splits text into chapters by word count', async () => {
+    // 6 words per page, 3 pages = 18 words total
     setupPdf([
-      ['Page 1 text'],
-      ['Page 2 text'],
-      ['Page 3 text'],
-      ['Page 4 text'],
-      ['Page 5 text'],
-      ['Page 6 text'],
+      ['word1 word2 word3 word4 word5 word6'],
+      ['word7 word8 word9 word10 word11 word12'],
+      ['word13 word14 word15 word16 word17 word18'],
     ])
 
     const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
-    const result = await importPdf(file, 3)
+    // 10 words per chapter -> first chapter gets ~10, second gets ~8
+    const result = await importPdf(file, 10)
 
-    expect(result.chapters).toHaveLength(2)
-    expect(result.chapters[0].text).toContain('Page 1 text')
-    expect(result.chapters[0].text).toContain('Page 3 text')
-    expect(result.chapters[1].text).toContain('Page 4 text')
-    expect(result.chapters[1].text).toContain('Page 6 text')
-    expect(result.meta.chapterCount).toBe(2)
+    expect(result.chapters.length).toBeGreaterThanOrEqual(2)
+    expect(result.meta.chapterCount).toBe(result.chapters.length)
   })
 
-  it('handles single page per chapter (pagesPerChapter=1)', async () => {
-    setupPdf([['Page A'], ['Page B'], ['Page C']])
+  it('keeps paragraphs together when both fit under the word limit', async () => {
+    // Two short paragraphs: 4 words each, total 8 words
+    setupPdf([['para1 w1 w2 w3\n\npara2 w1 w2 w3']])
 
     const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
-    const result = await importPdf(file, 1)
+    const result = await importPdf(file, 15)
 
-    expect(result.chapters).toHaveLength(3)
-    expect(result.chapters[0].text).toContain('Page A')
-    expect(result.chapters[2].text).toContain('Page C')
+    // Both paragraphs in one chapter (4+4=8 < 15)
+    expect(result.chapters).toHaveLength(1)
+    expect(result.chapters[0].text).toContain('para1')
+    expect(result.chapters[0].text).toContain('para2')
+  })
+
+  it('breaks at paragraph boundary when next paragraph would exceed limit', async () => {
+    // Page 1 has two paragraphs of 8 words each, page 2 has one of 8
+    setupPdf([
+      ['para1 w1 w2 w3 w4 w5 w6 w7 w8\n\npara2 w1 w2 w3 w4 w5 w6 w7 w8'],
+    ])
+
+    const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
+    const result = await importPdf(file, 10)
+
+    // First paragraph (8 words) < 10, so it stays alone
+    // Second paragraph (8 words) would make it 16 > 10, so new chapter
+    expect(result.chapters).toHaveLength(2)
+    expect(result.chapters[0].text).toContain('para1')
+    expect(result.chapters[0].text).not.toContain('para2')
+    expect(result.chapters[1].text).toContain('para2')
   })
 
   it('throws when PDF has no pages', async () => {
@@ -113,23 +125,11 @@ describe('importPdf', () => {
     await expect(importPdf(file)).rejects.toThrow('PDF contains no extractable text content')
   })
 
-  it('keeps chapters that have at least some non-empty text', async () => {
-    // First page empty, second page has text, third page empty
-    setupPdf([[''], ['Real content'], ['']])
-
-    const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
-    const result = await importPdf(file, 3)
-
-    // All 3 pages in one chapter; the joined text contains "Real content" so it's kept
-    expect(result.chapters).toHaveLength(1)
-    expect(result.chapters[0].text).toContain('Real content')
-  })
-
   it('generates correct slug and metadata', async () => {
-    setupPdf([['Some text']])
+    setupPdf([['Some text here']])
 
     const file = new File(['data'], 'My Great Book.pdf', { type: 'application/pdf' })
-    const result = await importPdf(file)
+    const result = await importPdf(file, 100)
 
     expect(result.meta.title).toBe('My Great Book')
     expect(result.meta.slug).toBe('my-great-book-unknown-author')
@@ -139,15 +139,15 @@ describe('importPdf', () => {
     expect(result.meta.id).toBeTruthy()
   })
 
-  it('uses default pagesPerChapter of 5', async () => {
-    // 7 pages with default grouping = 2 chapters (5 + 2)
-    const pageTexts = Array.from({ length: 7 }, (_, i) => [`Page ${i + 1}`])
+  it('uses default wordsPerChapter of 1750', async () => {
+    const pageTexts = Array.from({ length: 7 }, (_, i) => [`Page ${i + 1} text content here`])
     setupPdf(pageTexts)
 
     const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
-    const result = await importPdf(file)
+    const result = await importPdf(file) // no wordsPerChapter arg
 
-    expect(result.chapters).toHaveLength(2)
+    // With only ~7 words per page × 7 pages = 49 total, and 1750 words/chapter -> 1 chapter
+    expect(result.chapters).toHaveLength(1)
   })
 
   it('calls doc.destroy() even on error', async () => {

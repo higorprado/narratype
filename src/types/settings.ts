@@ -56,7 +56,7 @@ export interface Settings {
   virtualKeyboard: boolean
   statsUpdateFrequency: StatsUpdateFrequency
   wordsPerPage: number
-  pdfPagesPerChapter: number
+  pdfWordsPerChapter: number
   inactivityTimeout: number
 }
 
@@ -77,6 +77,6 @@ export const DEFAULT_SETTINGS: Settings = {
   virtualKeyboard: false,
   statsUpdateFrequency: 'word',
   wordsPerPage: 350,
-  pdfPagesPerChapter: 5,
+  pdfWordsPerChapter: 1750,
   inactivityTimeout: 5,
 }

@@ -18,7 +18,7 @@ export interface ImportedBooksState {
   books: Book[]
   importStatus: ImportStatus
   importError: string | null
-  importBook: (file: File) => Promise<void>
+  importBook: (file: File, options?: { wordsPerChapter?: number }) => Promise<void>
   deleteBook: (bookId: string) => Promise<void>
   refresh: () => Promise<void>
 }
@@ -47,13 +47,13 @@ export function useImportedBooks(): ImportedBooksState {
   }, [refresh])
 
   const importBook = useCallback(
-    async (file: File) => {
+    async (file: File, options?: { wordsPerChapter?: number }) => {
       setImportStatus('loading')
       setImportError(null)
       try {
         const ext = file.name.split('.').pop()?.toLowerCase()
         const result = ext === 'pdf'
-          ? await importPdf(file, settings.pdfPagesPerChapter)
+          ? await importPdf(file, options?.wordsPerChapter ?? settings.pdfWordsPerChapter)
           : await importEpub(file)
         await saveImportedBook(result.meta, result.chapters)
         await refresh()

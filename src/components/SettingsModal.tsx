@@ -71,14 +71,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<TabId>('functionality')
   const [localWordsPerPage, setLocalWordsPerPage] = useState(settings.wordsPerPage)
   const [localInactivityTimeout, setLocalInactivityTimeout] = useState(settings.inactivityTimeout)
-  const [localPdfPagesPerChapter, setLocalPdfPagesPerChapter] = useState(settings.pdfPagesPerChapter)
+  const [localPdfWordsPerChapter, setLocalPdfWordsPerChapter] = useState(settings.pdfWordsPerChapter)
 
   // Sync from external settings changes (e.g. Reset Defaults)
   useEffect(() => {
     setLocalWordsPerPage(settings.wordsPerPage)
     setLocalInactivityTimeout(settings.inactivityTimeout)
-    setLocalPdfPagesPerChapter(settings.pdfPagesPerChapter)
-  }, [settings.wordsPerPage, settings.inactivityTimeout, settings.pdfPagesPerChapter])
+    setLocalPdfWordsPerChapter(settings.pdfWordsPerChapter)
+  }, [settings.wordsPerPage, settings.inactivityTimeout, settings.pdfWordsPerChapter])
 
   const commitWordsPerPage = useCallback(() => {
     if (localWordsPerPage !== settings.wordsPerPage) {
@@ -92,11 +92,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [localInactivityTimeout, settings.inactivityTimeout, updateSetting])
 
-  const commitPdfPagesPerChapter = useCallback(() => {
-    if (localPdfPagesPerChapter !== settings.pdfPagesPerChapter) {
-      updateSetting('pdfPagesPerChapter', localPdfPagesPerChapter)
+  const commitPdfWordsPerChapter = useCallback(() => {
+    if (localPdfWordsPerChapter !== settings.pdfWordsPerChapter) {
+      updateSetting('pdfWordsPerChapter', localPdfWordsPerChapter)
     }
-  }, [localPdfPagesPerChapter, settings.pdfPagesPerChapter, updateSetting])
+  }, [localPdfWordsPerChapter, settings.pdfWordsPerChapter, updateSetting])
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -217,22 +217,25 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
 
         <div className={styles.sliderRow}>
-          <span className={styles.rowLabel}>PDF Pages per Chapter</span>
+          <span className={styles.rowLabel}>Words per Chapter (PDF)</span>
           <div className={styles.sliderControl}>
             <input
               type="range"
               className={styles.slider}
-              value={localPdfPagesPerChapter}
-              min={1}
-              max={50}
-              step={1}
-              onChange={(e) => setLocalPdfPagesPerChapter(parseInt(e.target.value, 10))}
-              onPointerUp={commitPdfPagesPerChapter}
-              onKeyUp={commitPdfPagesPerChapter}
-              aria-label="PDF Pages per Chapter"
+              value={localPdfWordsPerChapter}
+              min={100}
+              max={10000}
+              step={100}
+              onChange={(e) => setLocalPdfWordsPerChapter(parseInt(e.target.value, 10))}
+              onPointerUp={commitPdfWordsPerChapter}
+              onKeyUp={commitPdfWordsPerChapter}
+              aria-label="Words per Chapter for PDF"
             />
-            <span className={styles.sliderValue}>{localPdfPagesPerChapter}</span>
+            <span className={styles.sliderValue}>{localPdfWordsPerChapter.toLocaleString()}</span>
           </div>
+          <p className={styles.hint}>
+            (~{Math.max(1, Math.round(localPdfWordsPerChapter / settings.wordsPerPage))} pages per chapter at {settings.wordsPerPage} words/page)
+          </p>
         </div>
       </>
     )

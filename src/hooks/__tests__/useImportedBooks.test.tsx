@@ -109,7 +109,7 @@ describe('useImportedBooks', () => {
       expect(result.current.importError).toBeNull()
     })
 
-    it('dispatches to importPdf for .pdf files', async () => {
+    it('dispatches to importPdf for .pdf files with default wordsPerChapter', async () => {
       const file = new File(['content'], 'book.pdf', { type: 'application/pdf' })
       vi.mocked(importPdf).mockResolvedValue(importResult)
 
@@ -121,9 +121,25 @@ describe('useImportedBooks', () => {
         await result.current.importBook(file)
       })
 
-      expect(importPdf).toHaveBeenCalledWith(file, 5) // default pdfPagesPerChapter
+      expect(importPdf).toHaveBeenCalledWith(file, 1750) // default pdfWordsPerChapter
       expect(importEpub).not.toHaveBeenCalled()
       expect(saveImportedBook).toHaveBeenCalledWith(importResult.meta, importResult.chapters)
+      expect(result.current.importStatus).toBe('success')
+    })
+
+    it('dispatches to importPdf for .pdf files with custom wordsPerChapter', async () => {
+      const file = new File(['content'], 'book.pdf', { type: 'application/pdf' })
+      vi.mocked(importPdf).mockResolvedValue(importResult)
+
+      const { result } = renderHook(() => useImportedBooks(), { wrapper })
+
+      await waitFor(() => expect(getAllImportedBooks).toHaveBeenCalled())
+
+      await act(async () => {
+        await result.current.importBook(file, { wordsPerChapter: 3000 })
+      })
+
+      expect(importPdf).toHaveBeenCalledWith(file, 3000)
       expect(result.current.importStatus).toBe('success')
     })
 
@@ -173,7 +189,6 @@ describe('useImportedBooks', () => {
       })
 
       expect(deleteImportedBook).toHaveBeenCalledWith('book-1')
-      // refresh called after delete — getAllImportedBooks called twice total (mount + after delete)
       expect(getAllImportedBooks).toHaveBeenCalledTimes(2)
     })
   })
@@ -189,7 +204,6 @@ describe('useImportedBooks', () => {
         expect(result.current.books).toEqual([])
       })
 
-      // Now make storage return a book and call refresh
       vi.mocked(getAllImportedBooks).mockResolvedValue([meta])
 
       await act(async () => {

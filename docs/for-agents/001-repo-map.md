@@ -39,7 +39,8 @@ src/
 | `src/components/TypingArea.tsx` | Main typing orchestrator. Merges engine + accumulator. |
 | `src/components/StatsBar.tsx` | Displays WPM, accuracy, time. |
 | `src/components/SettingsModal.tsx` | User preferences UI. |
-| `src/components/ImportButton.tsx` | File picker for EPUB and PDF import. |
+| `src/components/ImportButton.tsx` | File picker for EPUB and PDF import. Shows config modal for PDFs. |
+| `src/components/ImportConfigModal.tsx` | PDF import configuration dialog (words per chapter). |
 | `src/pages/TypingConsolePage.tsx` | Primary page: book/chapter/page routing, stats display, navigation. |
 | `src/pages/ChaptersPage.tsx` | Chapter list for a book. |
 | `src/pages/HomePage.tsx` | Landing page with book grid. |
@@ -51,7 +52,7 @@ src/
 | `src/utils/stats.ts` | WPM and accuracy calculations. |
 | `src/utils/textNormalizer.ts` | Text normalization for built-in books. |
 | `src/utils/charComparator.ts` | Character comparison (case-insensitive, international mode). |
-| `src/utils/pdfImporter.ts` | PDF file parsing using pdfjs-dist. Extracts text, groups pages into chapters. |
+| `src/utils/pdfImporter.ts` | PDF file parsing using pdfjs-dist. Extracts text, splits into chapters by word count. |
 | `src/utils/slugify.ts` | Shared URL-safe slug generation from title + author. |
 | `src/context/SettingsContext.tsx` | Settings state with localStorage persistence. |
 | `src/context/ProgressContext.tsx` | Reading progress tracking with localStorage persistence. |

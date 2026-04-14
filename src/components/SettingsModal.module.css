@@ -303,12 +303,19 @@
 }
 
 .sliderValue {
-  width: 4ch;
+  min-width: 4ch;
+  width: auto;
   text-align: center;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-accent);
   font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.6;
 }
 
 .warning {
