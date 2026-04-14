@@ -58,8 +58,8 @@
 }
 
 .settingsButton:hover {
-  color: var(--color-text);
-  border-color: var(--color-text-muted);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .chapterTitle {
@@ -183,13 +183,46 @@
 }
 
 .button:hover:not(:disabled) {
-  background-color: var(--color-accent);
   border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.cancelButton {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.9rem;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.cancelButton:hover {
+  background-color: var(--color-border);
+}
+
+.actionButton {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.actionButton:hover {
+  opacity: 0.85;
 }
 
 .error {

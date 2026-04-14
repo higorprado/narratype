@@ -7,6 +7,7 @@ export interface SavedTypingSession {
   cursorPosition: number
   charStates: CharState[]
   startTime: number | null
+  elapsedMs: number
   savedAt: number
   textPrefix: string // first 100 chars for validation
 }
@@ -25,6 +26,7 @@ export function saveTypingSession(
   cursorPosition: number,
   charStates: CharState[],
   startTime: number | null,
+  elapsedMs: number,
   pageText: string,
 ): void {
   const session: SavedTypingSession = {
@@ -34,6 +36,7 @@ export function saveTypingSession(
     cursorPosition,
     charStates,
     startTime,
+    elapsedMs,
     savedAt: Date.now(),
     textPrefix: pageText.slice(0, TEXT_PREFIX_LEN),
   }
@@ -54,6 +57,8 @@ export function loadTypingSession(
     const raw = localStorage.getItem(storageKey(bookSlug, chapterIndex, pageIndex))
     if (!raw) return null
     const session: SavedTypingSession = JSON.parse(raw)
+    // Backward compat: sessions saved before the elapsedMs field may lack it
+    if (session.elapsedMs == null) session.elapsedMs = 0
     // Validate: text must match
     if (session.textPrefix !== currentPageText.slice(0, TEXT_PREFIX_LEN)) {
       clearTypingSession(bookSlug, chapterIndex, pageIndex)

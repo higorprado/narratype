@@ -29,6 +29,7 @@ const baseOpts = {
   chapterIndex: 0,
   pageIndex: 0,
   text: 'abc',
+  getElapsedMs: () => 0,
 }
 
 describe('useSessionPersistence', () => {
@@ -68,7 +69,7 @@ describe('useSessionPersistence', () => {
     expect(mockSave).toHaveBeenCalledWith(
       'test-book', 0, 0, 1,
       [CharState.UNTYPED, CharState.UNTYPED, CharState.UNTYPED],
-      1000, 'abc',
+      1000, 0, 'abc',
     )
   })
 
@@ -150,7 +151,7 @@ describe('useSessionPersistence', () => {
     expect(mockSave).toHaveBeenCalledWith(
       'test-book', 0, 0, 2,
       [CharState.UNTYPED, CharState.UNTYPED, CharState.UNTYPED],
-      1000, 'abc',
+      1000, 0, 'abc',
     )
   })
 
@@ -166,6 +167,24 @@ describe('useSessionPersistence', () => {
     expect(mockSave).not.toHaveBeenCalled()
   })
 
+
+  it('calls getElapsedMs during flush and passes result to saveTypingSession', () => {
+    const getElapsedMs = vi.fn().mockReturnValue(5000)
+    const { result } = renderHook(() =>
+      useSessionPersistence({ ...baseOpts, cursorPosition: 1, startTime: 1000, getElapsedMs }),
+    )
+
+    act(() => {
+      result.current.flush()
+    })
+
+    expect(getElapsedMs).toHaveBeenCalled()
+    expect(mockSave).toHaveBeenCalledWith(
+      'test-book', 0, 0, 1,
+      [CharState.UNTYPED, CharState.UNTYPED, CharState.UNTYPED],
+      1000, 5000, 'abc',
+    )
+  })
   it('removes event listeners on unmount', () => {
     const removeSpy = vi.spyOn(document, 'removeEventListener')
     const windowRemoveSpy = vi.spyOn(window, 'removeEventListener')

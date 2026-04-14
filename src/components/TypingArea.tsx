@@ -77,6 +77,7 @@ export default function TypingArea({
     chapterIndex: sessionRestore?.chapterIndex ?? 0,
     pageIndex: sessionRestore?.pageIndex ?? 0,
     text,
+    getElapsedMs: statsAcc.getElapsedMs,
   })
   const containerRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLSpanElement>(null)
@@ -87,6 +88,18 @@ export default function TypingArea({
   const lastStatsPosRef = useRef(-1)
   const prevCursorPosRef = useRef(0)
 
+  // Restore accumulator state from a saved session. The stats accumulator starts
+  // at zero on every mount, so we must pre-populate it with historical data.
+  // We use a ref to track whether we've handled the restore. The actual population
+  // and cursor sync happens when the engine finishes restoring (cursorPosition matches).
+  const restoredRef = useRef(false)
+  const session = sessionRestore?.savedSession
+  if (session && !restoredRef.current && cursorPosition === session.cursorPosition) {
+    restoredRef.current = true
+    const correctChars = session.charStates.filter((s) => s === 'CORRECT').length
+    statsAcc.restore(correctChars, session.elapsedMs)
+    prevCursorPosRef.current = cursorPosition
+  }
   // Inactivity timeout tracking
   const { isIdleRef, lastKeystrokeTimeRef, handlePause: handleInactivityPause } = useInactivityDetector({
     enabled: onInactivity != null,

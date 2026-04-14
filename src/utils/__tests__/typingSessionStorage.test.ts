@@ -51,7 +51,7 @@ const KEY = `narratype-session-${BOOK}-${CHAPTER}-${PAGE}`
 // ---------------------------------------------------------------------------
 describe('saveTypingSession', () => {
   it('stores data to localStorage', () => {
-    saveTypingSession(BOOK, CHAPTER, PAGE, 5, CHAR_STATES, 1234, PAGE_TEXT)
+    saveTypingSession(BOOK, CHAPTER, PAGE, 5, CHAR_STATES, 1234, 0, PAGE_TEXT)
 
     expect(store.has(KEY)).toBe(true)
     const parsed = JSON.parse(store.get(KEY)!)
@@ -75,14 +75,23 @@ describe('saveTypingSession', () => {
 
     // Should not throw
     expect(() => {
-      saveTypingSession(BOOK, CHAPTER, PAGE, 0, CHAR_STATES, null, PAGE_TEXT)
+      saveTypingSession(BOOK, CHAPTER, PAGE, 0, CHAR_STATES, null, 0, PAGE_TEXT)
     }).not.toThrow()
+  })
+
+  it('persists elapsedMs correctly', () => {
+    saveTypingSession(BOOK, CHAPTER, PAGE, 5, CHAR_STATES, 1234, 5000, PAGE_TEXT)
+
+    const session = loadTypingSession(BOOK, CHAPTER, PAGE, PAGE_TEXT)
+
+    expect(session).not.toBeNull()
+    expect(session!.elapsedMs).toBe(5000)
   })
 })
 
 describe('loadTypingSession', () => {
   it('returns saved session when valid', () => {
-    saveTypingSession(BOOK, CHAPTER, PAGE, 10, CHAR_STATES, 5678, PAGE_TEXT)
+    saveTypingSession(BOOK, CHAPTER, PAGE, 10, CHAR_STATES, 5678, 0, PAGE_TEXT)
 
     const session = loadTypingSession(BOOK, CHAPTER, PAGE, PAGE_TEXT)
 
@@ -102,7 +111,7 @@ describe('loadTypingSession', () => {
   })
 
   it('returns null and clears when text prefix does not match', () => {
-    saveTypingSession(BOOK, CHAPTER, PAGE, 0, CHAR_STATES, null, PAGE_TEXT)
+    saveTypingSession(BOOK, CHAPTER, PAGE, 0, CHAR_STATES, null, 0, PAGE_TEXT)
 
     const changedText = 'Something completely different.'
     const session = loadTypingSession(BOOK, CHAPTER, PAGE, changedText)
@@ -114,7 +123,7 @@ describe('loadTypingSession', () => {
 
   it('returns null and clears when charStates length does not match text length', () => {
     // Save with one text length
-    saveTypingSession(BOOK, CHAPTER, PAGE, 0, CHAR_STATES, null, PAGE_TEXT)
+    saveTypingSession(BOOK, CHAPTER, PAGE, 0, CHAR_STATES, null, 0, PAGE_TEXT)
 
     // Load with a different length text (same prefix to pass first check)
     const longerText = PAGE_TEXT + ' extra'
@@ -132,11 +141,30 @@ describe('loadTypingSession', () => {
 
     expect(session).toBeNull()
   })
+
+  it('returns 0 for elapsedMs when loading old session without it', () => {
+    const oldSession = {
+      bookSlug: BOOK,
+      chapterIndex: CHAPTER,
+      pageIndex: PAGE,
+      cursorPosition: 0,
+      charStates: CHAR_STATES,
+      startTime: null,
+      savedAt: 1_700_000_000_000,
+      textPrefix: PAGE_TEXT.slice(0, 100),
+    }
+    store.set(KEY, JSON.stringify(oldSession))
+
+    const session = loadTypingSession(BOOK, CHAPTER, PAGE, PAGE_TEXT)
+
+    expect(session).not.toBeNull()
+    expect(session!.elapsedMs).toBe(0)
+  })
 })
 
 describe('clearTypingSession', () => {
   it('removes the session', () => {
-    saveTypingSession(BOOK, CHAPTER, PAGE, 0, CHAR_STATES, null, PAGE_TEXT)
+    saveTypingSession(BOOK, CHAPTER, PAGE, 0, CHAR_STATES, null, 0, PAGE_TEXT)
     expect(store.has(KEY)).toBe(true)
 
     clearTypingSession(BOOK, CHAPTER, PAGE)
@@ -150,10 +178,10 @@ describe('clearChapterSessions', () => {
     const PAGE_COUNT = 5
     // Save sessions for pages 0..4
     for (let i = 0; i < PAGE_COUNT; i++) {
-      saveTypingSession(BOOK, CHAPTER, i, 0, CHAR_STATES, null, PAGE_TEXT)
+      saveTypingSession(BOOK, CHAPTER, i, 0, CHAR_STATES, null, 0, PAGE_TEXT)
     }
     // Save a session for a different chapter — should survive
-    saveTypingSession(BOOK, 1, 0, 0, CHAR_STATES, null, PAGE_TEXT)
+    saveTypingSession(BOOK, 1, 0, 0, CHAR_STATES, null, 0, PAGE_TEXT)
 
     clearChapterSessions(BOOK, CHAPTER, PAGE_COUNT)
 
@@ -168,7 +196,7 @@ describe('clearChapterSessions', () => {
 
 describe('session data structure', () => {
   it('has correct shape with all expected fields', () => {
-    saveTypingSession(BOOK, CHAPTER, PAGE, 3, CHAR_STATES, 9999, PAGE_TEXT)
+    saveTypingSession(BOOK, CHAPTER, PAGE, 3, CHAR_STATES, 9999, 0, PAGE_TEXT)
 
     const raw = store.get(KEY)!
     const parsed = JSON.parse(raw)
@@ -181,6 +209,7 @@ describe('session data structure', () => {
         'cursorPosition',
         'charStates',
         'startTime',
+        'elapsedMs',
         'savedAt',
         'textPrefix',
       ].sort(),

@@ -41,6 +41,12 @@ export function useStatsAccumulator() {
     }
   }
 
+  const restore = (totalChars: number, totalTimeMs: number) => {
+    state.current.totalChars = totalChars
+    state.current.totalTimeMs = totalTimeMs
+    state.current.sessionChars = 0
+    state.current.sessionStartTime = null
+  }
   const reset = () => {
     state.current = initialState()
   }
@@ -57,5 +63,5 @@ export function useStatsAccumulator() {
   const isSessionActive = (): boolean =>
     state.current.sessionStartTime !== null
 
-  return { onCharTyped, onCharDeleted, onPause, reset, getElapsedMs, getElapsedMsAtTime, getAllChars, isSessionActive }
+  return { onCharTyped, onCharDeleted, onPause, restore, reset, getElapsedMs, getElapsedMsAtTime, getAllChars, isSessionActive }
 }

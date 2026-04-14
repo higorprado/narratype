@@ -173,4 +173,59 @@ describe('useStatsAccumulator', () => {
     // No active session → returns totalTimeMs regardless of timestamp
     expect(result.current.getElapsedMsAtTime(99999)).toBe(3000)
   })
+  it('restore pre-populates totalChars and totalTimeMs without starting session', () => {
+    const { result } = renderHook(() => useStatsAccumulator())
+
+    act(() => {
+      result.current.restore(25, 5000)
+    })
+
+    expect(result.current.getAllChars()).toBe(25)
+    expect(result.current.getElapsedMsAtTime(10000)).toBe(5000)
+    expect(result.current.isSessionActive()).toBe(false)
+  })
+
+  it('restore allows subsequent typing to accumulate on top', () => {
+    nowSpy.mockReturnValue(1000)
+    const { result } = renderHook(() => useStatsAccumulator())
+
+    act(() => {
+      result.current.restore(25, 5000)
+    })
+
+    // New typing session starts from now
+    act(() => {
+      result.current.onCharTyped()
+      result.current.onCharTyped()
+    })
+
+    expect(result.current.getAllChars()).toBe(27) // 25 restored + 2 new
+    expect(result.current.isSessionActive()).toBe(true)
+
+    // Pause at t=2000 — new session was 1000ms
+    act(() => {
+      result.current.onPause(2000)
+    })
+
+    expect(result.current.getElapsedMsAtTime(2000)).toBe(6000) // 5000 restored + 1000 new
+    expect(result.current.getAllChars()).toBe(27)
+  })
+
+  it('restore resets session state (no dangling active session)', () => {
+    nowSpy.mockReturnValue(1000)
+    const { result } = renderHook(() => useStatsAccumulator())
+
+    act(() => {
+      result.current.onCharTyped()
+    })
+
+    expect(result.current.isSessionActive()).toBe(true)
+
+    act(() => {
+      result.current.restore(10, 3000)
+    })
+
+    expect(result.current.isSessionActive()).toBe(false)
+    expect(result.current.getAllChars()).toBe(10)
+  })
 })

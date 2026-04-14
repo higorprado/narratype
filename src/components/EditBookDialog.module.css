@@ -105,7 +105,7 @@
   border: none;
   border-radius: 6px;
   background-color: var(--color-accent);
-  color: #fff;
+  color: var(--color-bg);
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;

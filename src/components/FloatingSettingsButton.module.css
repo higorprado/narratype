@@ -20,6 +20,6 @@
 
 .button:hover {
   opacity: 1;
-  color: var(--color-text);
-  border-color: var(--color-text-muted);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }

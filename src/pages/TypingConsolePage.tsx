@@ -277,13 +277,13 @@ export default function TypingConsolePage() {
             <p className={styles.confirmSubtext}>All progress for this chapter will be lost.</p>
             <div className={styles.confirmActions}>
               <button
-                className={styles.button}
+                className={styles.cancelButton}
                 onClick={() => setShowRestartConfirm(false)}
               >
                 Cancel
               </button>
               <button
-                className={styles.button}
+                className={styles.actionButton}
                 onClick={() => {
                   if (bookSlug) {
                     clearChapterSessions(bookSlug, chapterIndex, totalPages)
