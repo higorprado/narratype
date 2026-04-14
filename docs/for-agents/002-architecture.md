@@ -86,3 +86,14 @@ When the typing area loses focus:
 - Stored in IndexedDB (`narratype-imported` database, `books` and `chapters` object stores).
 - Registered in memory via `registerImportedBooks()` in `data/index.ts`.
 - Displayed alongside built-in books in the home page.
+
+### Delete Flow
+1. User clicks delete button on BookCard (visible on hover for imported books).
+2. `ConfirmDialog` prompts for confirmation.
+3. On confirm: `useImportedBooks.deleteBook(slug)` looks up meta by slug, deletes from IndexedDB, refreshes book list.
+
+### Edit Flow
+1. User clicks edit button on BookCard (visible on hover for imported books, above delete button).
+2. `EditBookDialog` opens with pre-filled title and author inputs.
+3. On save: `useImportedBooks.updateBook(slug, { title, author })` looks up meta by slug, updates in IndexedDB (regenerating slug from new title+author), refreshes book list.
+4. Book slug changes after edit, so progress tracking resets for the renamed book.

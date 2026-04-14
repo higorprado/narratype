@@ -17,7 +17,7 @@ src/
   storage/        # IndexedDB storage layer for imported books
     __tests__/    # Storage tests
   styles/         # Global CSS, reset, fonts, theme definitions
-    themes/       # Per-theme CSS files (classic-light, ocean, etc.)
+    themes/       # Per-theme CSS files (20 themes including Catppuccin)
   test/           # Test setup (setup.ts)
   types/          # Shared TypeScript type definitions
   utils/          # Pure utility functions
@@ -32,27 +32,32 @@ src/
 |------|---------------|
 | `src/hooks/useTypingEngine.ts` | Typing state machine: chars, cursor, completion. Pure presentation. |
 | `src/hooks/useStatsAccumulator.ts` | Accumulates char counts and elapsed time across sessions. |
-| `src/hooks/useImportedBooks.ts` | Book import flow: dispatches to EPUB or PDF parser, stores, refreshes. |
+| `src/hooks/useImportedBooks.ts` | Book import, delete, edit flow. Dispatches to EPUB or PDF parser, stores, refreshes. |
 | `src/hooks/useTheme.ts` | Theme switching (CSS class on document root). |
 | `src/hooks/useFont.ts` | Font selection. |
 | `src/hooks/useDocumentTitle.ts` | Updates `document.title`. |
 | `src/components/TypingArea.tsx` | Main typing orchestrator. Merges engine + accumulator. |
 | `src/components/StatsBar.tsx` | Displays WPM, accuracy, time. |
-| `src/components/SettingsModal.tsx` | User preferences UI. |
+| `src/components/SettingsModal.tsx` | User preferences UI (themes, fonts, functionality). |
 | `src/components/ImportButton.tsx` | File picker for EPUB and PDF import. Shows config modal for PDFs. |
 | `src/components/ImportConfigModal.tsx` | PDF import configuration dialog (words per chapter). |
+| `src/components/ConfirmDialog.tsx` | Reusable confirmation dialog (used for book deletion). |
+| `src/components/EditBookDialog.tsx` | Edit imported book title and author. |
+| `src/components/BookCard.tsx` | Book card with edit/delete actions for imported books. |
+| `src/components/BookList.tsx` | Grid of book cards. |
 | `src/pages/TypingConsolePage.tsx` | Primary page: book/chapter/page routing, stats display, navigation. |
 | `src/pages/ChaptersPage.tsx` | Chapter list for a book. |
-| `src/pages/HomePage.tsx` | Landing page with book grid. |
+| `src/pages/HomePage.tsx` | Landing page with book grid, import button, edit/delete flows. |
 | `src/data/index.ts` | Book registry: built-in + imported books, chapter/page lookup. |
 | `src/data/books.ts` | Built-in book definitions (The Art of War, etc.). |
-| `src/storage/importedBooks.ts` | IndexedDB CRUD for imported EPUB books. |
+| `src/storage/importedBooks.ts` | IndexedDB CRUD for imported books (save, get, update, delete). |
 | `src/utils/typingSessionStorage.ts` | localStorage save/load for typing session state. |
 | `src/utils/textSplitter.ts` | Splits chapter text into pages by word count. |
 | `src/utils/stats.ts` | WPM and accuracy calculations. |
 | `src/utils/textNormalizer.ts` | Text normalization for built-in books. |
 | `src/utils/charComparator.ts` | Character comparison (case-insensitive, international mode). |
 | `src/utils/pdfImporter.ts` | PDF file parsing using pdfjs-dist. Extracts text, splits into chapters by word count. |
+| `src/utils/epubImporter.ts` | EPUB file parsing using @lingo-reader/epub-parser. |
 | `src/utils/slugify.ts` | Shared URL-safe slug generation from title + author. |
 | `src/context/SettingsContext.tsx` | Settings state with localStorage persistence. |
 | `src/context/ProgressContext.tsx` | Reading progress tracking with localStorage persistence. |
