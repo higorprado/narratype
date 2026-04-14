@@ -1,0 +1,12 @@
+[data-theme='catppuccin-latte'] {
+  --color-bg: #eff1f5;
+  --color-surface: #e6e9ef;
+  --color-text: #4c4f69;
+  --color-text-muted: #6c6f85;
+  --color-primary: #ccd0da;
+  --color-accent: #8839ef;
+  --color-correct: #40a02b;
+  --color-incorrect: #d20f39;
+  --color-cursor: #8839ef;
+  --color-untyped: #9ca0b0;
+}

@@ -1,0 +1,12 @@
+[data-theme='catppuccin-mocha'] {
+  --color-bg: #1e1e2e;
+  --color-surface: #181825;
+  --color-text: #cdd6f4;
+  --color-text-muted: #a6adc8;
+  --color-primary: #313244;
+  --color-accent: #cba6f7;
+  --color-correct: #a6e3a1;
+  --color-incorrect: #f38ba8;
+  --color-cursor: #cba6f7;
+  --color-untyped: #6c7086;
+}

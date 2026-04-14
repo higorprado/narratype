@@ -17,6 +17,10 @@ import '../styles/themes/surf.css'
 import '../styles/themes/platoon.css'
 import '../styles/themes/beachside.css'
 import '../styles/themes/pulse.css'
+import '../styles/themes/catppuccin-latte.css'
+import '../styles/themes/catppuccin-frappe.css'
+import '../styles/themes/catppuccin-macchiato.css'
+import '../styles/themes/catppuccin-mocha.css'
 
 export function useTheme(theme: ThemeName) {
   useEffect(() => {

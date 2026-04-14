@@ -17,6 +17,7 @@ const THEMES: ThemeName[] = [
   'classic-dark', 'classic-light', 'timber', 'ocean', 'bubblegum', 'newsprint',
   'cinder', 'bumblebee', 'terracotta', 'canopy', 'lagoon', 'mellow',
   'surf', 'platoon', 'beachside', 'pulse',
+  'catppuccin-latte', 'catppuccin-frappe', 'catppuccin-macchiato', 'catppuccin-mocha',
 ]
 const FONTS: FontName[] = ['literata', 'hyperlegible', 'open-dyslexic', 'fira-code', 'courier-prime', 'lora', 'bitter', 'comic-sans']
 
@@ -37,6 +38,10 @@ const THEME_COLORS: Record<ThemeName, { bg: string; accent: string; text: string
   'platoon': { bg: '#1a2614', accent: '#8b9a6b', text: '#d4dcc8' },
   'beachside': { bg: '#2b2520', accent: '#e8a87c', text: '#e8ddd0' },
   'pulse': { bg: '#1a0a2e', accent: '#9b59b6', text: '#e0d0f0' },
+  'catppuccin-latte': { bg: '#eff1f5', accent: '#8839ef', text: '#4c4f69' },
+  'catppuccin-frappe': { bg: '#303446', accent: '#ca9ee6', text: '#c6d0f5' },
+  'catppuccin-macchiato': { bg: '#24273a', accent: '#c6a0f6', text: '#cad3f5' },
+  'catppuccin-mocha': { bg: '#1e1e2e', accent: '#cba6f7', text: '#cdd6f4' },
 }
 
 

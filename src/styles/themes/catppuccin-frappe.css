@@ -1,0 +1,12 @@
+[data-theme='catppuccin-frappe'] {
+  --color-bg: #303446;
+  --color-surface: #292c3c;
+  --color-text: #c6d0f5;
+  --color-text-muted: #a5adce;
+  --color-primary: #414559;
+  --color-accent: #ca9ee6;
+  --color-correct: #a6d189;
+  --color-incorrect: #e78284;
+  --color-cursor: #ca9ee6;
+  --color-untyped: #737994;
+}

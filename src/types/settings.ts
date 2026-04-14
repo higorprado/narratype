@@ -26,6 +26,10 @@ export type ThemeName =
   | 'platoon'
   | 'beachside'
   | 'pulse'
+  | 'catppuccin-latte'
+  | 'catppuccin-frappe'
+  | 'catppuccin-macchiato'
+  | 'catppuccin-mocha'
 
 export type FontName =
   | 'literata'

@@ -1,0 +1,12 @@
+[data-theme='catppuccin-macchiato'] {
+  --color-bg: #24273a;
+  --color-surface: #1e2030;
+  --color-text: #cad3f5;
+  --color-text-muted: #a5adcb;
+  --color-primary: #363a4f;
+  --color-accent: #c6a0f6;
+  --color-correct: #a6da95;
+  --color-incorrect: #ed8796;
+  --color-cursor: #c6a0f6;
+  --color-untyped: #6e738d;
+}
