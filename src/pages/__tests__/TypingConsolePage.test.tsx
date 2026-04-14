@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { SettingsProvider } from '@/context/SettingsContext'
 import { ProgressProvider } from '@/context/ProgressContext'
@@ -10,7 +11,8 @@ beforeAll(() => {
 })
 
 function renderWithRoute(path: string) {
-  return render(
+  const user = userEvent.setup()
+  const result = render(
     <SettingsProvider>
       <ProgressProvider>
         <MemoryRouter initialEntries={[path]}>
@@ -24,6 +26,7 @@ function renderWithRoute(path: string) {
       </ProgressProvider>
     </SettingsProvider>,
   )
+  return { user, ...result }
 }
 
 describe('TypingConsolePage', () => {
@@ -90,5 +93,60 @@ describe('TypingConsolePage', () => {
     renderWithRoute('/typing-console/nonexistent-book/0/0')
 
     expect(screen.getByText('Return to home')).toBeInTheDocument()
+  })
+
+  it('does not show inactivity overlay initially', () => {
+    renderWithRoute('/typing-console/the-art-of-war/0/0')
+
+    expect(screen.queryByText('Paused')).not.toBeInTheDocument()
+  })
+
+  it('does not show completion overlay initially', () => {
+    renderWithRoute('/typing-console/the-art-of-war/0/0')
+
+    expect(screen.queryByText('Page complete!')).not.toBeInTheDocument()
+  })
+
+  it('renders Settings button', () => {
+    renderWithRoute('/typing-console/the-art-of-war/0/0')
+
+    expect(
+      screen.getByRole('button', { name: /settings/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('hides restart confirmation dialog initially', () => {
+    renderWithRoute('/typing-console/the-art-of-war/0/0')
+
+    expect(
+      screen.queryByText('Restart this chapter from the beginning?'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows restart confirmation when restart button is clicked', async () => {
+    const { user } = renderWithRoute('/typing-console/the-art-of-war/0/0')
+
+    // There are two Restart buttons (header + bottom bar); click the first one
+    const restartButtons = screen.getAllByRole('button', { name: /restart/i })
+    await user.click(restartButtons[0])
+
+    expect(
+      screen.getByText('Restart this chapter from the beginning?'),
+    ).toBeInTheDocument()
+  })
+
+  it('can dismiss restart confirmation by clicking Cancel', async () => {
+    const { user } = renderWithRoute('/typing-console/the-art-of-war/0/0')
+
+    const restartButtons = screen.getAllByRole('button', { name: /restart/i })
+    await user.click(restartButtons[0])
+    expect(
+      screen.getByText('Restart this chapter from the beginning?'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+    expect(
+      screen.queryByText('Restart this chapter from the beginning?'),
+    ).not.toBeInTheDocument()
   })
 })

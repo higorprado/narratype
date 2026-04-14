@@ -106,5 +106,89 @@ describe('TypingArea', () => {
     // The apostrophe at index 1 should be correct
     expect(spans[1].textContent).toBe("'")
     expect(spans[1].className).toContain('correct')
+
   })
+  it('calls onInactivity on blur after typing', () => {
+    const onInactivity = vi.fn()
+    render(<TypingArea text="hi" onInactivity={onInactivity} />)
+    const area = screen.getByTestId('typing-area')
+
+    fireEvent.focus(area)
+    fireEvent.keyDown(area, { key: 'h' })
+    fireEvent.blur(area)
+
+    expect(onInactivity).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not call onInactivity on blur when not started', () => {
+    const onInactivity = vi.fn()
+    render(<TypingArea text="hi" onInactivity={onInactivity} />)
+    const area = screen.getByTestId('typing-area')
+
+    fireEvent.focus(area)
+    // Blur without typing anything
+    fireEvent.blur(area)
+
+    expect(onInactivity).not.toHaveBeenCalled()
+  })
+
+  it('does not call onInactivity on blur when already complete', () => {
+    const onInactivity = vi.fn()
+    render(<TypingArea text="ab" onInactivity={onInactivity} />)
+    const area = screen.getByTestId('typing-area')
+
+    fireEvent.focus(area)
+    fireEvent.keyDown(area, { key: 'a' })
+    fireEvent.keyDown(area, { key: 'b' })
+    // Session is complete now
+    fireEvent.blur(area)
+
+    expect(onInactivity).not.toHaveBeenCalled()
+  })
+
+  it('calls onStatsUpdate with frozen stats on blur', () => {
+    const onStatsUpdate = vi.fn()
+    render(<TypingArea text="hi" onStatsUpdate={onStatsUpdate} />)
+    const area = screen.getByTestId('typing-area')
+
+    fireEvent.focus(area)
+    fireEvent.keyDown(area, { key: 'h' })
+    fireEvent.blur(area)
+
+    expect(onStatsUpdate).toHaveBeenCalledTimes(1)
+    // Verify it has the expected stats shape
+    const stats = onStatsUpdate.mock.calls[0][0]
+    expect(stats).toHaveProperty('wpm')
+    expect(stats).toHaveProperty('accuracy')
+  })
+
+  it('shows cursor overlay when focused and hides on blur', () => {
+    render(<TypingArea text="hi" />)
+    const area = screen.getByTestId('typing-area')
+
+    fireEvent.focus(area)
+    // After focus: overlay div exists
+    expect(area.querySelector(':scope > div')).not.toBeNull()
+
+    fireEvent.blur(area)
+    // After blur: overlay is gone
+    expect(area.querySelector(':scope > div')).toBeNull()
+  })
+
+  it('clears inactivity timer on unmount without errors', () => {
+    vi.useFakeTimers()
+    const { unmount } = render(
+      <TypingArea text="hi" inactivityTimeout={1000} />
+    )
+    const area = screen.getByTestId('typing-area')
+
+    fireEvent.focus(area)
+    fireEvent.keyDown(area, { key: 'h' })
+
+    // Unmount while timer is pending
+    expect(() => unmount()).not.toThrow()
+    vi.useRealTimers()
+  })
+
+
 })

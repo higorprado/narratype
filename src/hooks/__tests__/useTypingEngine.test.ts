@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import { useTypingEngine } from '../useTypingEngine'
+import type { TypingEngineRestore } from '../useTypingEngine'
 import { CharState } from '@/types'
 
 describe('useTypingEngine', () => {
@@ -335,5 +336,145 @@ describe('useTypingEngine', () => {
       expect(result.current.chars[4].state).toBe(CharState.CORRECT)
       expect(result.current.cursorPosition).toBe(5) // past the em-dash
     })
+  })
+
+  describe('RESTORE action', () => {
+    it('should restore from saved session', async () => {
+      const text = 'Hello'
+      const restore: TypingEngineRestore = {
+        savedSession: {
+          bookSlug: 'test-book',
+          chapterIndex: 0,
+          pageIndex: 0,
+          cursorPosition: 3,
+          charStates: [CharState.CORRECT, CharState.CORRECT, CharState.CORRECT],
+          startTime: 1000,
+          savedAt: 2000,
+          textPrefix: 'Hel',
+        },
+        bookSlug: 'test-book',
+        chapterIndex: 0,
+        pageIndex: 0,
+      }
+
+      const { result } = renderHook(() => useTypingEngine(text, {}, restore))
+
+      await waitFor(() => {
+        expect(result.current.cursorPosition).toBe(3)
+      })
+
+      expect(result.current.chars[0].state).toBe(CharState.CORRECT)
+      expect(result.current.chars[1].state).toBe(CharState.CORRECT)
+      expect(result.current.chars[2].state).toBe(CharState.CORRECT)
+      expect(result.current.chars[3].state).toBe(CharState.UNTYPED)
+      expect(result.current.chars[4].state).toBe(CharState.UNTYPED)
+    })
+
+    it('should restore startTime from saved session', async () => {
+      const text = 'Hello'
+      const restore: TypingEngineRestore = {
+        savedSession: {
+          bookSlug: 'test-book',
+          chapterIndex: 0,
+          pageIndex: 0,
+          cursorPosition: 2,
+          charStates: [CharState.CORRECT, CharState.CORRECT],
+          startTime: 1700000000000,
+          savedAt: 1700000001000,
+          textPrefix: 'He',
+        },
+        bookSlug: 'test-book',
+        chapterIndex: 0,
+        pageIndex: 0,
+      }
+
+      const { result } = renderHook(() => useTypingEngine(text, {}, restore))
+
+      await waitFor(() => {
+        expect(result.current.startTime).toBe(1700000000000)
+      })
+    })
+
+    it('should mark isComplete when restored cursor is at end', async () => {
+      const text = 'Hi'
+      const restore: TypingEngineRestore = {
+        savedSession: {
+          bookSlug: 'test-book',
+          chapterIndex: 0,
+          pageIndex: 0,
+          cursorPosition: text.length,
+          charStates: [CharState.CORRECT, CharState.CORRECT],
+          startTime: 1000,
+          savedAt: 2000,
+          textPrefix: 'Hi',
+        },
+        bookSlug: 'test-book',
+        chapterIndex: 0,
+        pageIndex: 0,
+      }
+
+      const { result } = renderHook(() => useTypingEngine(text, {}, restore))
+
+      await waitFor(() => {
+        expect(result.current.isComplete).toBe(true)
+      })
+    })
+
+    it('should treat missing charStates as UNTYPED', async () => {
+      const text = 'Hello'
+      // charStates only covers first 2 chars; rest should default to UNTYPED
+      const restore: TypingEngineRestore = {
+        savedSession: {
+          bookSlug: 'test-book',
+          chapterIndex: 0,
+          pageIndex: 0,
+          cursorPosition: 2,
+          charStates: [CharState.CORRECT, CharState.INCORRECT],
+          startTime: 1000,
+          savedAt: 2000,
+          textPrefix: 'He',
+        },
+        bookSlug: 'test-book',
+        chapterIndex: 0,
+        pageIndex: 0,
+      }
+
+      const { result } = renderHook(() => useTypingEngine(text, {}, restore))
+
+      await waitFor(() => {
+        expect(result.current.cursorPosition).toBe(2)
+      })
+
+      expect(result.current.chars[0].state).toBe(CharState.CORRECT)
+      expect(result.current.chars[1].state).toBe(CharState.INCORRECT)
+      expect(result.current.chars[2].state).toBe(CharState.UNTYPED)
+      expect(result.current.chars[3].state).toBe(CharState.UNTYPED)
+      expect(result.current.chars[4].state).toBe(CharState.UNTYPED)
+    })
+  })
+
+  it('should calculate getStats accuracy correctly with mixed char states', () => {
+    const { result } = renderHook(() => useTypingEngine('Hello'))
+
+    act(() => {
+      result.current.handleKeyPress('H')  // correct
+      result.current.handleKeyPress('e')  // correct
+      result.current.handleKeyPress('X')  // incorrect
+      result.current.handleKeyPress('l')  // correct
+    })
+
+    const stats = result.current.getStats()
+    expect(stats.correctChars).toBe(3)
+    expect(stats.totalTypedChars).toBe(4)
+    expect(stats.accuracy).toBe(75)
+  })
+
+  it('should return 100 accuracy with no typed chars', () => {
+    const { result } = renderHook(() => useTypingEngine('Hello'))
+
+    const stats = result.current.getStats()
+    expect(stats.correctChars).toBe(0)
+    expect(stats.totalTypedChars).toBe(0)
+    expect(stats.accuracy).toBe(100)
   })
 })
