@@ -1,15 +1,18 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ChaptersPage } from '../ChaptersPage'
+import { SettingsProvider } from '@/context/SettingsContext'
 
 function renderAt(path: string) {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/chapters/:bookSlug" element={<ChaptersPage />} />
-        <Route path="/" element={<div>Home</div>} />
-      </Routes>
-    </MemoryRouter>,
+    <SettingsProvider>
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/chapters/:bookSlug" element={<ChaptersPage />} />
+          <Route path="/" element={<div>Home</div>} />
+        </Routes>
+      </MemoryRouter>
+    </SettingsProvider>,
   )
 }
 
@@ -55,14 +58,15 @@ describe('ChaptersPage', () => {
   })
 
   it('shows not found when bookSlug param is missing', () => {
-    // This route won't match /chapters/:bookSlug, so we test directly
     render(
-      <MemoryRouter initialEntries={['/chapters/']}>
-        <Routes>
-          <Route path="/chapters/:bookSlug" element={<ChaptersPage />} />
-          <Route path="*" element={<div>Not matched</div>} />
-        </Routes>
-      </MemoryRouter>,
+      <SettingsProvider>
+        <MemoryRouter initialEntries={['/chapters/']}>
+          <Routes>
+            <Route path="/chapters/:bookSlug" element={<ChaptersPage />} />
+            <Route path="*" element={<div>Not matched</div>} />
+          </Routes>
+        </MemoryRouter>
+      </SettingsProvider>,
     )
 
     // Route doesn't match, so ChaptersPage doesn't render

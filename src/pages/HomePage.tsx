@@ -6,6 +6,7 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import EditBookDialog from '@/components/EditBookDialog'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useImportedBooks } from '@/hooks/useImportedBooks'
+import FloatingSettingsButton from '@/components/FloatingSettingsButton'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
@@ -78,6 +79,7 @@ export default function HomePage() {
           onCancel={handleEditCancel}
         />
       )}
+      <FloatingSettingsButton />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { getBookBySlug } from '@/data'
 import { ChapterList } from '@/components/ChapterList'
+import FloatingSettingsButton from '@/components/FloatingSettingsButton'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import styles from './ChaptersPage.module.css'
 
@@ -18,6 +19,7 @@ export function ChaptersPage() {
             Back to Books
           </Link>
         </div>
+        <FloatingSettingsButton />
       </div>
     )
   }
@@ -39,6 +41,7 @@ export function ChaptersPage() {
       <Link to="/" className={styles.backLink}>
         Back to Books
       </Link>
+      <FloatingSettingsButton />
     </div>
   )
 }
