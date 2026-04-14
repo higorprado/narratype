@@ -21,15 +21,15 @@ describe('ChaptersPage', () => {
     renderAt('/chapters/the-call-of-cthulhu')
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'The Art of War',
+      'The Call of Cthulhu',
     )
   })
 
   it('renders chapters for the book', () => {
     renderAt('/chapters/the-call-of-cthulhu')
 
-    expect(screen.getByText('Chapter I. LAYING PLANS')).toBeInTheDocument()
-    expect(screen.getByText('Chapter II. WAGING WAR')).toBeInTheDocument()
+    expect(screen.getByText('The Horror in Clay')).toBeInTheDocument()
+    expect(screen.getByText('The Tale of Inspector Legrasse')).toBeInTheDocument()
   })
 
   it('renders breadcrumb with Books link and book title', () => {
@@ -38,7 +38,7 @@ describe('ChaptersPage', () => {
     const booksLink = screen.getByText('Books')
     expect(booksLink).toBeInTheDocument()
     expect(booksLink.closest('a')).toHaveAttribute('href', '/')
-    expect(screen.getAllByText('The Art of War').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('The Call of Cthulhu').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('>')).toBeInTheDocument()
   })
 

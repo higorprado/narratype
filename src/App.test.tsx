@@ -41,7 +41,7 @@ describe('App', () => {
     renderApp('/chapters/the-call-of-cthulhu')
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'The Art of War' }),
+      screen.getByRole('heading', { level: 1, name: 'The Call of Cthulhu' }),
     ).toBeInTheDocument()
   })
 

@@ -33,7 +33,7 @@ describe('TypingConsolePage', () => {
   it('renders page content for valid book/chapter/page', () => {
     renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
-    expect(screen.getByText('The Art of War')).toBeInTheDocument()
+    expect(screen.getByText('The Call of Cthulhu')).toBeInTheDocument()
     expect(screen.getByTestId('stats-bar')).toBeInTheDocument()
     expect(screen.getByTestId('typing-area')).toBeInTheDocument()
   })
@@ -42,7 +42,7 @@ describe('TypingConsolePage', () => {
     renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(screen.getByText('Books')).toBeInTheDocument()
-    expect(screen.getByText('The Art of War')).toBeInTheDocument()
+    expect(screen.getByText('The Call of Cthulhu')).toBeInTheDocument()
   })
 
   it('shows page info', () => {
