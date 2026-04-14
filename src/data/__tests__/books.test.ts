@@ -35,14 +35,14 @@ describe('books data', () => {
 
   it('contains expected books', () => {
     const slugs = books.map((b) => b.slug)
-    expect(slugs).toContain('the-art-of-war')
+    expect(slugs).toContain('alice-in-wonderland')
     expect(slugs).toContain('the-call-of-cthulhu')
     expect(slugs).toContain('a-christmas-carol')
   })
 
-  it('The Art of War has 13 chapters', () => {
-    const book = getBookBySlug('the-art-of-war')!
-    expect(book.chapters).toHaveLength(13)
+  it('Alice in Wonderland has 12 chapters', () => {
+    const book = getBookBySlug('alice-in-wonderland')!
+    expect(book.chapters).toHaveLength(12)
   })
 
   it('The Call of Cthulhu has 3 sections', () => {
@@ -64,9 +64,9 @@ describe('getAllBooks', () => {
 
 describe('getBookBySlug', () => {
   it('returns the correct book for a valid slug', () => {
-    const book = getBookBySlug('the-art-of-war')
+    const book = getBookBySlug('the-call-of-cthulhu')
     expect(book).toBeDefined()
-    expect(book!.slug).toBe('the-art-of-war')
+    expect(book!.slug).toBe('the-call-of-cthulhu')
   })
 
   it('returns undefined for an invalid slug', () => {
@@ -76,19 +76,19 @@ describe('getBookBySlug', () => {
 
 describe('getChapter', () => {
   it('returns the correct chapter for valid indices', () => {
-    const chapter = getChapter('the-art-of-war', 0)
+    const chapter = getChapter('the-call-of-cthulhu', 0)
     expect(chapter).toBeDefined()
     expect(chapter!.title).toBeTruthy()
     expect(chapter!.text).toBeTruthy()
   })
 
   it('returns undefined for negative index', () => {
-    expect(getChapter('the-art-of-war', -1)).toBeUndefined()
+    expect(getChapter('the-call-of-cthulhu', -1)).toBeUndefined()
   })
 
   it('returns undefined for out-of-bounds index', () => {
-    const book = getBookBySlug('the-art-of-war')!
-    expect(getChapter('the-art-of-war', book.chapters.length)).toBeUndefined()
+    const book = getBookBySlug('the-call-of-cthulhu')!
+    expect(getChapter('the-call-of-cthulhu', book.chapters.length)).toBeUndefined()
   })
 
   it('returns undefined for invalid book slug', () => {
@@ -98,7 +98,7 @@ describe('getChapter', () => {
 
 describe('getPage', () => {
   it('returns a page with correct text for valid inputs', () => {
-    const page = getPage('the-art-of-war', 0, 0)
+    const page = getPage('the-call-of-cthulhu', 0, 0)
     expect(page).toBeDefined()
     expect(page!.text).toBeTruthy()
     expect(page!.chapterIndex).toBe(0)
@@ -106,16 +106,16 @@ describe('getPage', () => {
   })
 
   it('returns undefined for negative page index', () => {
-    expect(getPage('the-art-of-war', 0, -1)).toBeUndefined()
+    expect(getPage('the-call-of-cthulhu', 0, -1)).toBeUndefined()
   })
 
   it('returns undefined for out-of-bounds page index', () => {
-    const count = getPageCount('the-art-of-war', 0)
-    expect(getPage('the-art-of-war', 0, count)).toBeUndefined()
+    const count = getPageCount('the-call-of-cthulhu', 0)
+    expect(getPage('the-call-of-cthulhu', 0, count)).toBeUndefined()
   })
 
   it('returns undefined for invalid chapter index', () => {
-    expect(getPage('the-art-of-war', -1, 0)).toBeUndefined()
+    expect(getPage('the-call-of-cthulhu', -1, 0)).toBeUndefined()
   })
 
   it('returns undefined for invalid book slug', () => {
@@ -125,7 +125,7 @@ describe('getPage', () => {
 
 describe('getPageCount', () => {
   it('returns a positive number for valid inputs', () => {
-    const count = getPageCount('the-art-of-war', 0)
+    const count = getPageCount('the-call-of-cthulhu', 0)
     expect(count).toBeGreaterThan(0)
   })
 
@@ -134,7 +134,7 @@ describe('getPageCount', () => {
   })
 
   it('returns 0 for invalid chapter index', () => {
-    expect(getPageCount('the-art-of-war', -1)).toBe(0)
-    expect(getPageCount('the-art-of-war', 999)).toBe(0)
+    expect(getPageCount('the-call-of-cthulhu', -1)).toBe(0)
+    expect(getPageCount('the-call-of-cthulhu', 999)).toBe(0)
   })
 })

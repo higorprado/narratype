@@ -78,8 +78,8 @@ describe('ProgressContext', () => {
       const { markPageComplete, getBookCompletionPercent } = useProgress()
       return (
         <>
-          <span data-testid="percent">{getBookCompletionPercent('the-art-of-war')}</span>
-          <button onClick={() => markPageComplete('the-art-of-war', 0, 0)}>mark</button>
+          <span data-testid="percent">{getBookCompletionPercent('the-call-of-cthulhu')}</span>
+          <button onClick={() => markPageComplete('the-call-of-cthulhu', 0, 0)}>mark</button>
         </>
       )
     }

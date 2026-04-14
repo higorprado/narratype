@@ -5,7 +5,7 @@ import { ChapterList } from '../ChapterList'
 import { getBookBySlug } from '@/data'
 
 describe('ChapterList', () => {
-  const book = getBookBySlug('the-art-of-war')!
+  const book = getBookBySlug('the-call-of-cthulhu')!
   const chapters = book.chapters.slice(0, 3)
 
   it('renders all chapters with titles', () => {
@@ -40,9 +40,9 @@ describe('ChapterList', () => {
     )
 
     const links = screen.getAllByRole('link')
-    expect(links[0]).toHaveAttribute('href', '/typing-console/the-art-of-war/0/0')
-    expect(links[1]).toHaveAttribute('href', '/typing-console/the-art-of-war/1/0')
-    expect(links[2]).toHaveAttribute('href', '/typing-console/the-art-of-war/2/0')
+    expect(links[0]).toHaveAttribute('href', '/typing-console/the-call-of-cthulhu/0/0')
+    expect(links[1]).toHaveAttribute('href', '/typing-console/the-call-of-cthulhu/1/0')
+    expect(links[2]).toHaveAttribute('href', '/typing-console/the-call-of-cthulhu/2/0')
   })
 
   it('navigates on click', async () => {
@@ -59,7 +59,7 @@ describe('ChapterList', () => {
     // Clicking a link doesn't error — link is interactive
     expect(firstChapter.closest('a')).toHaveAttribute(
       'href',
-      '/typing-console/the-art-of-war/0/0',
+      '/typing-console/the-call-of-cthulhu/0/0',
     )
   })
 

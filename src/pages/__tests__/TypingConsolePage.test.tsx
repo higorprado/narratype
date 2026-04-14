@@ -31,7 +31,7 @@ function renderWithRoute(path: string) {
 
 describe('TypingConsolePage', () => {
   it('renders page content for valid book/chapter/page', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(screen.getByText('The Art of War')).toBeInTheDocument()
     expect(screen.getByTestId('stats-bar')).toBeInTheDocument()
@@ -39,34 +39,34 @@ describe('TypingConsolePage', () => {
   })
 
   it('shows breadcrumb navigation', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(screen.getByText('Books')).toBeInTheDocument()
     expect(screen.getByText('The Art of War')).toBeInTheDocument()
   })
 
   it('shows page info', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     const pageInfo = screen.getByText(/Page \d+ \/ \d+/)
     expect(pageInfo).toBeInTheDocument()
   })
 
   it('shows Restart button', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(screen.getByText('Restart')).toBeInTheDocument()
   })
 
   it('shows Previous Page and Next Page buttons', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(screen.getByText('Previous Page')).toBeInTheDocument()
     expect(screen.getByText('Next Page')).toBeInTheDocument()
   })
 
   it('disables Previous Page on first page', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(screen.getByText('Previous Page')).toBeDisabled()
   })
@@ -78,13 +78,13 @@ describe('TypingConsolePage', () => {
   })
 
   it('shows page not found for invalid chapter index', () => {
-    renderWithRoute('/typing-console/the-art-of-war/999/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/999/0')
 
     expect(screen.getByText('Page not found')).toBeInTheDocument()
   })
 
   it('shows page not found for invalid page index', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/9999')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/9999')
 
     expect(screen.getByText('Page not found')).toBeInTheDocument()
   })
@@ -96,19 +96,19 @@ describe('TypingConsolePage', () => {
   })
 
   it('does not show inactivity overlay initially', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(screen.queryByText('Paused')).not.toBeInTheDocument()
   })
 
   it('does not show completion overlay initially', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(screen.queryByText('Page complete!')).not.toBeInTheDocument()
   })
 
   it('renders Settings button', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(
       screen.getByRole('button', { name: /settings/i }),
@@ -116,7 +116,7 @@ describe('TypingConsolePage', () => {
   })
 
   it('hides restart confirmation dialog initially', () => {
-    renderWithRoute('/typing-console/the-art-of-war/0/0')
+    renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     expect(
       screen.queryByText('Restart this chapter from the beginning?'),
@@ -124,7 +124,7 @@ describe('TypingConsolePage', () => {
   })
 
   it('shows restart confirmation when restart button is clicked', async () => {
-    const { user } = renderWithRoute('/typing-console/the-art-of-war/0/0')
+    const { user } = renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     // There are two Restart buttons (header + bottom bar); click the first one
     const restartButtons = screen.getAllByRole('button', { name: /restart/i })
@@ -136,7 +136,7 @@ describe('TypingConsolePage', () => {
   })
 
   it('can dismiss restart confirmation by clicking Cancel', async () => {
-    const { user } = renderWithRoute('/typing-console/the-art-of-war/0/0')
+    const { user } = renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
 
     const restartButtons = screen.getAllByRole('button', { name: /restart/i })
     await user.click(restartButtons[0])

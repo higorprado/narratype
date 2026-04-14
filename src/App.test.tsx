@@ -24,7 +24,7 @@ describe('App', () => {
   })
 
   it('renders Header on chapters route', () => {
-    renderApp('/chapters/the-art-of-war')
+    renderApp('/chapters/the-call-of-cthulhu')
 
     expect(screen.getByText('Narratype')).toBeInTheDocument()
   })
@@ -38,7 +38,7 @@ describe('App', () => {
   })
 
   it('renders ChaptersPage at /chapters/:bookSlug', () => {
-    renderApp('/chapters/the-art-of-war')
+    renderApp('/chapters/the-call-of-cthulhu')
 
     expect(
       screen.getByRole('heading', { level: 1, name: 'The Art of War' }),
@@ -46,7 +46,7 @@ describe('App', () => {
   })
 
   it('navigates to typing console route and renders it', () => {
-    renderApp('/typing-console/the-art-of-war/0/0')
+    renderApp('/typing-console/the-call-of-cthulhu/0/0')
 
     // TypingConsolePage renders the book title in breadcrumb and Settings button
     expect(screen.getByText('Settings')).toBeInTheDocument()

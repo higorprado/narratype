@@ -18,7 +18,7 @@ function renderAt(path: string) {
 
 describe('ChaptersPage', () => {
   it('renders book title as heading', () => {
-    renderAt('/chapters/the-art-of-war')
+    renderAt('/chapters/the-call-of-cthulhu')
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'The Art of War',
@@ -26,14 +26,14 @@ describe('ChaptersPage', () => {
   })
 
   it('renders chapters for the book', () => {
-    renderAt('/chapters/the-art-of-war')
+    renderAt('/chapters/the-call-of-cthulhu')
 
     expect(screen.getByText('Chapter I. LAYING PLANS')).toBeInTheDocument()
     expect(screen.getByText('Chapter II. WAGING WAR')).toBeInTheDocument()
   })
 
   it('renders breadcrumb with Books link and book title', () => {
-    renderAt('/chapters/the-art-of-war')
+    renderAt('/chapters/the-call-of-cthulhu')
 
     const booksLink = screen.getByText('Books')
     expect(booksLink).toBeInTheDocument()
@@ -43,7 +43,7 @@ describe('ChaptersPage', () => {
   })
 
   it('renders Back to Books link', () => {
-    renderAt('/chapters/the-art-of-war')
+    renderAt('/chapters/the-call-of-cthulhu')
 
     const backLinks = screen.getAllByText('Back to Books')
     expect(backLinks.length).toBeGreaterThanOrEqual(1)
@@ -74,7 +74,7 @@ describe('ChaptersPage', () => {
   })
 
   it('chapter links point to typing console', () => {
-    renderAt('/chapters/the-art-of-war')
+    renderAt('/chapters/the-call-of-cthulhu')
 
     const links = screen.getAllByRole('link')
     const chapterLinks = links.filter(
@@ -83,7 +83,7 @@ describe('ChaptersPage', () => {
     expect(chapterLinks.length).toBeGreaterThan(0)
     expect(chapterLinks[0]).toHaveAttribute(
       'href',
-      '/typing-console/the-art-of-war/0/0',
+      '/typing-console/the-call-of-cthulhu/0/0',
     )
   })
 })
