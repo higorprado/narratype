@@ -1,6 +1,5 @@
 import { initEpubFile } from '@lingo-reader/epub-parser'
 import type { ImportedBookMeta, ImportedChapter } from '@/types/book'
-import { normalizeBookText } from '@/utils/textNormalizer'
 import { generateSlug } from '@/utils/slugify'
 
 export interface EpubImportResult {
@@ -46,8 +45,9 @@ export function htmlToPlainText(html: string): string {
 /**
  * Import an EPUB file.
  *
- * Parses the EPUB, extracts chapter text, normalizes it,
+ * Parses the EPUB, extracts chapter text,
  * and returns metadata + chapter data ready for storage.
+ * Text normalization is handled at read time by getChapter().
  */
 export async function importEpub(file: File): Promise<EpubImportResult> {
   const epub = await initEpubFile(file)
@@ -73,7 +73,7 @@ export async function importEpub(file: File): Promise<EpubImportResult> {
       try {
         const chapterData = await epub.loadChapter(spineItem.id)
         const rawText = htmlToPlainText(chapterData.html)
-        const text = normalizeBookText(rawText)
+        const text = rawText
 
         // Skip empty chapters
         if (text.trim().length === 0) continue

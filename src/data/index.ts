@@ -24,8 +24,8 @@ export function getChapter(bookSlug: BookSlug, chapterIndex: number) {
   const book = getBookBySlug(bookSlug)
   if (!book || chapterIndex < 0 || chapterIndex >= book.chapters.length) return undefined
   const chapter = book.chapters[chapterIndex]
-  // Imported books are already normalized; built-in books need normalization
-  const text = book.isImported ? chapter.text : normalizeBookText(chapter.text)
+  // Normalize all book text at read time (handles both built-in and imported)
+  const text = normalizeBookText(chapter.text)
   return { ...chapter, text }
 }
 

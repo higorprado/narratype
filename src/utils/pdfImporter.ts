@@ -1,7 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import type { ImportedBookMeta, ImportedChapter } from '@/types/book'
-import { normalizeBookText } from '@/utils/textNormalizer'
 import { generateSlug } from '@/utils/slugify'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
@@ -83,8 +82,9 @@ function splitIntoChapters(
  * Import a PDF file.
  *
  * Extracts text page by page, splits into chapters by word count
- * (breaking at paragraph boundaries), normalizes the text,
+ * (breaking at paragraph boundaries),
  * and returns metadata + chapter data ready for storage.
+ * Text normalization is handled at read time by getChapter().
  */
 export async function importPdf(file: File, wordsPerChapter: number = 1750): Promise<PdfImportResult> {
   const buffer = await file.arrayBuffer()
@@ -108,8 +108,7 @@ export async function importPdf(file: File, wordsPerChapter: number = 1750): Pro
     for (let i = 1; i <= totalPages; i++) {
       const page = await doc.getPage(i)
       const rawText = await extractPageText(page)
-      const normalized = normalizeBookText(rawText)
-      pageTexts.push(normalized)
+      pageTexts.push(rawText)
     }
 
     const allText = pageTexts.join('\n\n')
