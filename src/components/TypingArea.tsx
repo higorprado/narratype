@@ -118,14 +118,18 @@ export default function TypingArea({
   })
 
   // Dead key tracking: on international keyboards (ABNT2, US-Intl, etc.), pressing
-  // ' sends key='Dead'. We store the physical key code, then when the user
-  // presses space (to produce standalone ') we process it.
+  // ' or " may send key='Dead'. We store the produced character (accounting
+  // for Shift), then when the user presses space we emit it.
   const deadKeyRef = useRef<string | null>(null)
 
-  // Map physical key codes to their dead-key base character
-  const DEAD_KEY_MAP: Record<string, string> = {
-    Quote: "'",
-    Backquote: '`',
+  // Map physical key codes + shift state to the character the dead key produces.
+  // e.g. Quote without Shift → ', Quote with Shift → ".
+  const getDeadKeyChar = (code: string, shift: boolean): string | null => {
+    switch (code) {
+      case 'Quote': return shift ? '"' : "'"
+      case 'Backquote': return '`'
+      default: return null
+    }
   }
 
   // Capture keyboard input (disabled in reading mode)
@@ -136,10 +140,10 @@ export default function TypingArea({
         e.preventDefault()
       }
 
-      // Handle dead key: store the base char and wait for next key
+      // Handle dead key: store the produced char and wait for next key
       if (e.key === 'Dead') {
-        const base = DEAD_KEY_MAP[e.code]
-        if (base) deadKeyRef.current = base
+        const ch = getDeadKeyChar(e.code, e.shiftKey)
+        if (ch) deadKeyRef.current = ch
         return
       }
 

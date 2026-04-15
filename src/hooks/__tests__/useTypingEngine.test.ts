@@ -481,4 +481,32 @@ describe('useTypingEngine', () => {
     expect(stats.totalTypedChars).toBe(0)
     expect(stats.accuracy).toBe(100)
   })
+
+  describe('double quotes', () => {
+    const quoteText = '"hello"'
+
+    it('should match double quote at start of text', () => {
+      const { result } = renderHook(() => useTypingEngine(quoteText))
+      act(() => {
+        result.current.handleKeyPress('"')
+      })
+      expect(result.current.chars[0].state).toBe(CharState.CORRECT)
+      expect(result.current.cursorPosition).toBe(1)
+    })
+
+    it('should match double quote at end of text', () => {
+      const { result } = renderHook(() => useTypingEngine(quoteText))
+      act(() => {
+        result.current.handleKeyPress('"')
+        result.current.handleKeyPress('h')
+        result.current.handleKeyPress('e')
+        result.current.handleKeyPress('l')
+        result.current.handleKeyPress('l')
+        result.current.handleKeyPress('o')
+        result.current.handleKeyPress('"')
+      })
+      expect(result.current.chars[6].state).toBe(CharState.CORRECT)
+      expect(result.current.cursorPosition).toBe(7)
+    })
+  })
 })

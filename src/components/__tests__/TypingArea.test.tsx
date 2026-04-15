@@ -108,6 +108,22 @@ describe('TypingArea', () => {
     expect(spans[1].className).toContain('correct')
 
   })
+
+  it('handles Shift+Quote dead key followed by space as double quote', () => {
+    render(<TypingArea text='a"b' />)
+    const area = screen.getByTestId('typing-area')
+
+    // Type 'a' normally
+    fireEvent.keyDown(area, { key: 'a' })
+
+    // Simulate Shift+Quote dead key (produces ") then space
+    fireEvent.keyDown(area, { key: 'Dead', code: 'Quote', shiftKey: true })
+    fireEvent.keyDown(area, { key: ' ' })
+
+    const spans = screen.getAllByTestId('char-span')
+    expect(spans[1].textContent).toBe('"')
+    expect(spans[1].className).toContain('correct')
+  })
   it('calls onInactivity on blur after typing', () => {
     const onInactivity = vi.fn()
     render(<TypingArea text="hi" onInactivity={onInactivity} />)
