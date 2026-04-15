@@ -1,7 +1,7 @@
 import { useReducer, useCallback, useRef, useEffect } from 'react'
 import { CharState } from '@/types'
 import type { TypingChar, TypingStats } from '@/types'
-import { compareChars } from '@/utils/charComparator'
+import { compareChars, PUNCTUATION } from '@/utils/charComparator'
 import { calculateAccuracy } from '@/utils/stats'
 import type { SavedTypingSession } from '@/utils/typingSessionStorage'
 
@@ -30,11 +30,6 @@ type Action =
   | { type: 'KEY_PRESS'; key: string }
   | { type: 'RESET'; text: string }
   | { type: 'RESTORE'; text: string; session: SavedTypingSession }
-const PUNCTUATION_CHARS = new Set([
-  '.', ',', ';', ':', '!', '?', '"', "'",
-  '(', ')', '[', ']', '{', '}', '-',
-  '\u2014', '\u2013', '\u201C', '\u201D', '\u2018', '\u2019',
-])
 
 const IGNORED_KEYS = new Set([
   'Shift', 'Control', 'Alt', 'Meta', 'CapsLock',
@@ -126,7 +121,7 @@ function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
 
           // Skip punctuation if enabled
           if (options.skipPunctuation) {
-            while (newPos < newChars.length && PUNCTUATION_CHARS.has(newChars[newPos].char)) {
+            while (newPos < newChars.length && PUNCTUATION.has(newChars[newPos].char)) {
               newChars[newPos] = { ...newChars[newPos], state: CharState.SKIPPED }
               newPos++
             }
@@ -169,7 +164,7 @@ function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
 
         // Skip punctuation if enabled
         if (options.skipPunctuation) {
-          while (newPos < newChars.length && PUNCTUATION_CHARS.has(newChars[newPos].char)) {
+          while (newPos < newChars.length && PUNCTUATION.has(newChars[newPos].char)) {
             newChars[newPos] = { ...newChars[newPos], state: CharState.SKIPPED }
             newPos++
           }

@@ -6,7 +6,7 @@ export interface CompareOptions {
   skipPunctuation?: boolean
 }
 
-const PUNCTUATION = new Set([
+export const PUNCTUATION = new Set([
   '.', ',', ';', ':', '!', '?', '"', "'",
   '(', ')', '[', ']', '{', '}', '-', 
   '\u2014', '\u2013', '\u201C', '\u201D', '\u2018', '\u2019', '\u201E',
