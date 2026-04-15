@@ -51,6 +51,11 @@ export default function AboutPage() {
           Narratype does not collect personal data. All typing progress and imported books are stored
           exclusively in your browser. No data is sent to external servers.
         </p>
+        <p>
+          We display ads through Google AdSense. When you first visit, you choose your cookie preferences:
+          personalized ads, non-personalized ads only, or no ad cookies at all. You can also disable ads
+          entirely in Settings. Regardless of your choice, your typing data never leaves your browser.
+        </p>
       </section>
 
       <section className={styles.section}>
