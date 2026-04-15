@@ -1,0 +1,30 @@
+.adContainer {
+  text-align: center;
+  overflow: hidden;
+}
+
+.devPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: 4px;
+  min-height: 90px;
+  opacity: 0.6;
+}
+
+.adLabel {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.slotId {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-family: monospace;
+}
