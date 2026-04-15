@@ -69,6 +69,7 @@ const BOOLEAN_KEYS: { key: keyof Settings; label: string }[] = [
   { key: 'hideUI', label: 'Hide UI' },
   { key: 'autoAdvancePage', label: 'Auto-Advance Page' },
   { key: 'autoScroll', label: 'Auto-Scroll' },
+  { key: 'disableAds', label: 'Disable Ads' },
 ]
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
