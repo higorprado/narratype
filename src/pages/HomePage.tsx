@@ -7,9 +7,12 @@ import EditBookDialog from '@/components/EditBookDialog'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useImportedBooks } from '@/hooks/useImportedBooks'
 import FloatingSettingsButton from '@/components/FloatingSettingsButton'
+import AdSlot from '@/components/AdSlot'
+import { useSettings } from '@/context/SettingsContext'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
+  const { settings } = useSettings()
   const { importStatus, importError, importBook, deleteBook, updateBook } = useImportedBooks()
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [pendingEditId, setPendingEditId] = useState<string | null>(null)
@@ -63,6 +66,11 @@ export default function HomePage() {
         />
         <BookList books={books} onDelete={handleDeleteRequest} onEdit={handleEditRequest} />
       </main>
+      {!settings.disableAds && (
+        <div className={styles.footerAd}>
+          <AdSlot slot="SLOT_HOME_FOOTER" format="horizontal" />
+        </div>
+      )}
       <ConfirmDialog
         isOpen={pendingDeleteId !== null}
         title="Delete Book"

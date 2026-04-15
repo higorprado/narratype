@@ -6,6 +6,7 @@ import { useSettings } from '@/context/SettingsContext'
 import StatsBar from '@/components/StatsBar'
 import TypingArea from '@/components/TypingArea'
 import SettingsModal from '@/components/SettingsModal'
+import AdSlot from '@/components/AdSlot'
 import { useProgress } from '@/context/ProgressContext'
 import { usePageNavigation } from '@/hooks/usePageNavigation'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -157,7 +158,8 @@ export default function TypingConsolePage() {
         <StatsBar wpm={wpm} accuracy={accuracy} isStarted={isStarted} />
       )}
 
-      <main ref={mainRef} className={styles.main}>
+      <div className={styles.contentArea}>
+        <main ref={mainRef} className={styles.main}>
         <div className={`${styles.typingWrapper} ${isCompleted ? styles.completed : ''}`}>
           <TypingArea
             key={`${bookSlug}-${chapterIndex}-${pageIndex}-${page.text.length}-${restartKey}`}
@@ -200,10 +202,21 @@ export default function TypingConsolePage() {
                 <span>{stats?.wpm ?? 0} WPM</span>
                 <span>{stats?.accuracy ?? 100}% ACC</span>
               </div>
+              {!settings.disableAds && (
+                <div className={styles.inactivityAd}>
+                  <AdSlot slot="SLOT_TYPING_PAUSE" format="rectangle" />
+                </div>
+              )}
             </div>
           )}
         </div>
-      </main>
+        </main>
+        {!settings.hideUI && !settings.disableAds && (
+          <aside className={styles.sidebarAd}>
+            <AdSlot slot="SLOT_TYPING_SIDEBAR" format="rectangle" />
+          </aside>
+        )}
+      </div>
 
       {!settings.hideUI && (
         <footer className={styles.footer}>
