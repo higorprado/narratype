@@ -17,3 +17,21 @@
 .appName:hover {
   text-decoration: underline;
 }
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.navLink {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.navLink:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}

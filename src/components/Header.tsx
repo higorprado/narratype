@@ -8,6 +8,9 @@ export function Header() {
       <Link to="/" className={styles.appName}>
         Narratype
       </Link>
+      <nav className={styles.nav}>
+        <Link to="/about" className={styles.navLink}>About</Link>
+      </nav>
       <ThemeToggle />
     </header>
   )
