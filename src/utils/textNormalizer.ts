@@ -15,11 +15,13 @@ const QUOTE_REPLACEMENTS: ReadonlyMap<string, string> = new Map([
   ['\u2019', "'"],  // right single quote → straight apostrophe
   ['\u201C', '"'],  // left double quote → straight quote
   ['\u201D', '"'],  // right double quote → straight quote
+  ['\u201E', '"'],  // double low-9 quote → straight quote (German, Eastern European)
   ['\u00AB', '"'],  // left guillemet → straight quote
   ['\u00BB', '"'],  // right guillemet → straight quote
+  ['\uFF02', '"'],  // fullwidth quotation mark → straight quote (CJK)
 ])
 
-const QUOTE_PATTERN = /[\u2018\u2019\u201C\u201D\u00AB\u00BB]/g
+const QUOTE_PATTERN = /[\u2018\u2019\u201C\u201D\u201E\u00AB\u00BB\uFF02]/g
 
 /** Mapping of diacritics and special characters to ASCII equivalents. */
 const CHAR_REPLACEMENTS: ReadonlyMap<string, string> = new Map([

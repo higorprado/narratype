@@ -7,9 +7,20 @@ export interface CompareOptions {
 }
 
 const PUNCTUATION = new Set([
-  '.', ',', ';', ':', '!', '?', '"', "'", 
+  '.', ',', ';', ':', '!', '?', '"', "'",
   '(', ')', '[', ']', '{', '}', '-', 
-  '\u2014', '\u2013', '\u201C', '\u201D', '\u2018', '\u2019',
+  '\u2014', '\u2013', '\u201C', '\u201D', '\u2018', '\u2019', '\u201E',
+])
+
+
+/** Characters treated as equivalent to a straight single quote. */
+const SINGLE_QUOTE_EQUIV = new Set([
+  "'", '\u2018', '\u2019', '\u00B4',
+])
+
+/** Characters treated as equivalent to a straight double quote. */
+const DOUBLE_QUOTE_EQUIV = new Set([
+  '"', '\u201C', '\u201D', '\u201E', '\u00AB', '\u00BB', '\uFF02',
 ])
 
 /**
@@ -36,6 +47,14 @@ export function compareChars(
     if (typed.toLowerCase() === expected.toLowerCase()) {
       return CharState.CORRECT
     }
+  }
+
+  // Quote equivalence — typed straight quote matches any curly/smart variant
+  if (SINGLE_QUOTE_EQUIV.has(typed) && SINGLE_QUOTE_EQUIV.has(expected)) {
+    return CharState.CORRECT
+  }
+  if (DOUBLE_QUOTE_EQUIV.has(typed) && DOUBLE_QUOTE_EQUIV.has(expected)) {
+    return CharState.CORRECT
   }
 
   return CharState.INCORRECT

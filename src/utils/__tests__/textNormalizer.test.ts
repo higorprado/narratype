@@ -92,6 +92,14 @@ selected by the general for his temporary use.
     expect(normalizeBookText(input)).toBe('He said "it\'s fine" and left')
   })
 
+  it('normalizes low-9 double quote to straight quote', () => {
+    expect(normalizeBookText('\u201Ehello\u201D')).toBe('"hello"')
+  })
+
+  it('normalizes fullwidth quotation mark to straight quote', () => {
+    expect(normalizeBookText('\uFF02hello\uFF02')).toBe('"hello"')
+  })
+
   it('normalizes breve-u to plain u', () => {
     expect(normalizeBookText('Sun Tz\u016D')).toBe('Sun Tzu')
   })

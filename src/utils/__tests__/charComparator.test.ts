@@ -54,6 +54,40 @@ describe('compareChars', () => {
     })
   })
 
+  describe('quote equivalence', () => {
+    it('straight double quote matches left curly double quote', () => {
+      expect(compareChars('"', '\u201C')).toBe(CharState.CORRECT)
+    })
+
+    it('straight double quote matches right curly double quote', () => {
+      expect(compareChars('"', '\u201D')).toBe(CharState.CORRECT)
+    })
+
+    it('straight double quote matches low-9 double quote', () => {
+      expect(compareChars('"', '\u201E')).toBe(CharState.CORRECT)
+    })
+
+    it('straight single quote matches left curly single quote', () => {
+      expect(compareChars("'", '\u2018')).toBe(CharState.CORRECT)
+    })
+
+    it('straight single quote matches right curly single quote', () => {
+      expect(compareChars("'", '\u2019')).toBe(CharState.CORRECT)
+    })
+
+    it('curly double quotes match each other', () => {
+      expect(compareChars('\u201C', '\u201D')).toBe(CharState.CORRECT)
+    })
+
+    it('curly single quotes match each other', () => {
+      expect(compareChars('\u2018', '\u2019')).toBe(CharState.CORRECT)
+    })
+
+    it('double quote does not match single quote', () => {
+      expect(compareChars('"', "'")).toBe(CharState.INCORRECT)
+    })
+  })
+
   describe('combined options', () => {
     it('should apply ignoreCapitalization and skipPunctuation together', () => {
       expect(compareChars('a', 'A', { ignoreCapitalization: true, skipPunctuation: true })).toBe(CharState.CORRECT)
