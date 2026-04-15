@@ -73,6 +73,11 @@ export default function ImportButton({ onImport, status, error }: ImportButtonPr
         {status === 'loading' ? 'Importing...' : 'Import Book'}
       </button>
       {error && <p className={styles.error}>{error}</p>}
+      {status !== 'loading' && (
+        <p className={styles.storageNote}>
+          Imported books are stored locally in your browser. Clearing browser data will remove them.
+        </p>
+      )}
       <ImportConfigModal
         isOpen={showConfig}
         fileName={pendingPdf?.name ?? ''}

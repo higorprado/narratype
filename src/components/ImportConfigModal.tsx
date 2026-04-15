@@ -78,6 +78,9 @@ export default function ImportConfigModal({
               (~{estimatedPages} page{estimatedPages !== 1 ? 's' : ''} per chapter, based on {wordsPerPage} words per page)
             </p>
           </div>
+          <div className={styles.warning}>
+            <strong>Note:</strong> Imported books are stored locally in your browser. If you clear your browser cache or data, imported books will be removed. In a future version, we plan to add login and cloud sync.
+          </div>
         </div>
 
         <div className={styles.footer}>

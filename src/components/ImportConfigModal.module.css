@@ -129,3 +129,18 @@
 .importButton:hover {
   opacity: 0.85;
 }
+
+.warning {
+  margin-top: 1rem;
+  padding: 0.6rem 0.75rem;
+  background-color: color-mix(in srgb, #ffa726 10%, transparent);
+  border: 1px solid color-mix(in srgb, #ffa726 30%, transparent);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.warning strong {
+  color: #ffa726;
+}

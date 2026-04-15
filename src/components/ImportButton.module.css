@@ -34,3 +34,10 @@
   font-size: 0.85rem;
   margin: 0.5rem 0 0;
 }
+
+.storageNote {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0.4rem 0 0;
+  opacity: 0.7;
+}
