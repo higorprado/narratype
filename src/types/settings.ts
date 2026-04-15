@@ -84,5 +84,5 @@ export const DEFAULT_SETTINGS: Settings = {
   wordsPerPage: 350,
   pdfWordsPerChapter: 1750,
   inactivityTimeout: 5,
-  disableAds: false,
+  disableAds: true,
 }
