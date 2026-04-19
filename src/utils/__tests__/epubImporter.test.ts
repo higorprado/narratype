@@ -77,3 +77,193 @@ describe('htmlToPlainText', () => {
     expect(normalized).toContain('Second paragraph.')
   })
 })
+
+import { vi, beforeEach } from 'vitest'
+import { importEpub } from '../epubImporter'
+
+const mockDestroy = vi.fn()
+const mockLoadChapter = vi.fn()
+const mockGetMetadata = vi.fn()
+const mockGetSpine = vi.fn()
+const mockEpub = {
+  getMetadata: mockGetMetadata,
+  getSpine: mockGetSpine,
+  loadChapter: mockLoadChapter,
+  destroy: mockDestroy,
+}
+
+vi.mock('@lingo-reader/epub-parser', () => ({
+  initEpubFile: vi.fn(() => Promise.resolve(mockEpub)),
+}))
+
+function makeFile(name: string): File {
+  return new File([], name, { type: 'application/epub+zip' })
+}
+
+describe('importEpub', () => {
+  beforeEach(() => {
+    mockGetMetadata.mockReset()
+    mockGetSpine.mockReset()
+    mockLoadChapter.mockReset()
+    mockDestroy.mockReset()
+  })
+
+  it('extracts metadata and chapters from valid EPUB', async () => {
+    mockGetMetadata.mockReturnValue({
+      title: 'Test Book',
+      creator: [{ contributor: 'Jane Doe' }],
+      language: 'en',
+    })
+    mockGetSpine.mockReturnValue([
+      { id: 'ch1', href: 'ch1.xhtml', mediaType: 'application/xhtml+xml' },
+      { id: 'ch2', href: 'ch2.xhtml', mediaType: 'application/xhtml+xml' },
+    ])
+    mockLoadChapter
+      .mockResolvedValueOnce({ html: '<p>Chapter one content</p>', css: [] })
+      .mockResolvedValueOnce({ html: '<p>Chapter two content</p>', css: [] })
+
+    const result = await importEpub(makeFile('test.epub'))
+
+    expect(result.meta.title).toBe('Test Book')
+    expect(result.meta.author).toBe('Jane Doe')
+    expect(result.meta.language).toBe('en')
+    expect(result.chapters).toHaveLength(2)
+    expect(result.chapters[0].title).toBe('Chapter 1')
+    expect(result.chapters[1].title).toBe('Chapter 2')
+  })
+
+  it('falls back to filename when title is empty', async () => {
+    mockGetMetadata.mockReturnValue({
+      title: '',
+      creator: [{ contributor: 'Jane Doe' }],
+      language: 'en',
+    })
+    mockGetSpine.mockReturnValue([
+      { id: 'ch1', href: 'ch1.xhtml', mediaType: 'application/xhtml+xml' },
+    ])
+    mockLoadChapter.mockResolvedValue({ html: '<p>Content</p>', css: [] })
+
+    const result = await importEpub(makeFile('my-book.epub'))
+
+    expect(result.meta.title).toBe('my-book')
+  })
+
+  it('falls back to Unknown Author when no creator', async () => {
+    mockGetMetadata.mockReturnValue({ title: 'Some Book', language: 'en' })
+    mockGetSpine.mockReturnValue([
+      { id: 'ch1', href: 'ch1.xhtml', mediaType: 'application/xhtml+xml' },
+    ])
+    mockLoadChapter.mockResolvedValue({ html: '<p>Content</p>', css: [] })
+
+    const result = await importEpub(makeFile('test.epub'))
+
+    expect(result.meta.author).toBe('Unknown Author')
+  })
+
+  it('skips empty chapters and re-indexes', async () => {
+    mockGetMetadata.mockReturnValue({
+      title: 'Test Book',
+      creator: [{ contributor: 'Author' }],
+      language: 'en',
+    })
+    mockGetSpine.mockReturnValue([
+      { id: 'ch1', href: 'ch1.xhtml', mediaType: 'application/xhtml+xml' },
+      { id: 'ch2', href: 'ch2.xhtml', mediaType: 'application/xhtml+xml' },
+      { id: 'ch3', href: 'ch3.xhtml', mediaType: 'application/xhtml+xml' },
+    ])
+    mockLoadChapter
+      .mockResolvedValueOnce({ html: '<p>First</p>', css: [] })
+      .mockResolvedValueOnce({ html: '<p></p>', css: [] })
+      .mockResolvedValueOnce({ html: '<p>Third</p>', css: [] })
+
+    const result = await importEpub(makeFile('test.epub'))
+
+    expect(result.chapters).toHaveLength(2)
+    expect(result.chapters[0].index).toBe(0)
+    expect(result.chapters[0].title).toBe('Chapter 1')
+    expect(result.chapters[1].index).toBe(1)
+    expect(result.chapters[1].title).toBe('Chapter 2')
+  })
+
+  it('throws when spine is empty', async () => {
+    mockGetMetadata.mockReturnValue({
+      title: 'Empty',
+      creator: [{ contributor: 'Author' }],
+      language: 'en',
+    })
+    mockGetSpine.mockReturnValue([])
+
+    await expect(importEpub(makeFile('empty.epub'))).rejects.toThrow(
+      'EPUB has no readable chapters',
+    )
+  })
+
+  it('throws when all chapters are empty', async () => {
+    mockGetMetadata.mockReturnValue({
+      title: 'NoText',
+      creator: [{ contributor: 'Author' }],
+      language: 'en',
+    })
+    mockGetSpine.mockReturnValue([
+      { id: 'ch1', href: 'ch1.xhtml', mediaType: 'application/xhtml+xml' },
+      { id: 'ch2', href: 'ch2.xhtml', mediaType: 'application/xhtml+xml' },
+    ])
+    mockLoadChapter.mockResolvedValue({ html: '<p></p>', css: [] })
+
+    await expect(importEpub(makeFile('notext.epub'))).rejects.toThrow(
+      'EPUB contains no extractable text content',
+    )
+  })
+
+  it('skips individual chapters that fail to load', async () => {
+    mockGetMetadata.mockReturnValue({
+      title: 'Partial',
+      creator: [{ contributor: 'Author' }],
+      language: 'en',
+    })
+    mockGetSpine.mockReturnValue([
+      { id: 'ch1', href: 'ch1.xhtml', mediaType: 'application/xhtml+xml' },
+      { id: 'ch2', href: 'ch2.xhtml', mediaType: 'application/xhtml+xml' },
+      { id: 'ch3', href: 'ch3.xhtml', mediaType: 'application/xhtml+xml' },
+    ])
+    mockLoadChapter
+      .mockResolvedValueOnce({ html: '<p>First</p>', css: [] })
+      .mockRejectedValueOnce(new Error('load failed'))
+      .mockResolvedValueOnce({ html: '<p>Third</p>', css: [] })
+
+    const result = await importEpub(makeFile('partial.epub'))
+
+    expect(result.chapters).toHaveLength(2)
+    expect(result.chapters[0].title).toBe('Chapter 1')
+    expect(result.chapters[1].title).toBe('Chapter 2')
+  })
+
+  it('calls destroy in finally block even on error', async () => {
+    mockGetMetadata.mockReturnValue({
+      title: 'Fail',
+      creator: [{ contributor: 'Author' }],
+      language: 'en',
+    })
+    mockGetSpine.mockReturnValue([])
+
+    await expect(importEpub(makeFile('fail.epub'))).rejects.toThrow()
+    expect(mockDestroy).toHaveBeenCalled()
+  })
+
+  it('generates slug from title and author', async () => {
+    mockGetMetadata.mockReturnValue({
+      title: 'My Great Book',
+      creator: [{ contributor: 'Jane Doe' }],
+      language: 'en',
+    })
+    mockGetSpine.mockReturnValue([
+      { id: 'ch1', href: 'ch1.xhtml', mediaType: 'application/xhtml+xml' },
+    ])
+    mockLoadChapter.mockResolvedValue({ html: '<p>Content</p>', css: [] })
+
+    const result = await importEpub(makeFile('test.epub'))
+
+    // generateSlug('My Great Book', 'Jane Doe') -> 'my-great-book-jane-doe'
+    expect(result.meta.slug).toBe('my-great-book-jane-doe')
+  })
+})
