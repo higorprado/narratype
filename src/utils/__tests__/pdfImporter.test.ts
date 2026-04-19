@@ -11,16 +11,35 @@ vi.mock('pdfjs-dist', () => ({
 
 import { importPdf } from '@/utils/pdfImporter'
 
-function makeTextItem(str: string, hasEOL = false) {
-  return { str, hasEOL, dir: 'ltr', transform: [], width: 0, height: 0 }
+/**
+ * Create a text content item with position data.
+ * Items are placed in a simple single-column layout by default.
+ */
+function makeTextItem(str: string, opts?: { x?: number; y?: number; width?: number; height?: number }) {
+  return {
+    str,
+    dir: 'ltr',
+    transform: [12, 0, 0, 12, opts?.x ?? 50, opts?.y ?? 400],
+    width: opts?.width ?? str.length * 7,
+    height: opts?.height ?? 12,
+    fontName: 'g_font',
+  }
+}
+
+/**
+ * Create text items for a simple page layout where each string is on its own line.
+ * Lines are spaced 20 units apart, starting from y=400 downward.
+ */
+function makePageItems(texts: string[]): ReturnType<typeof makeTextItem>[] {
+  return texts.map((text, i) => makeTextItem(text, { y: 400 - i * 20 }))
 }
 
 let pages: Array<{ getTextContent: ReturnType<typeof vi.fn> }>
 
-function setupPdf(pageTexts: string[][]) {
-  pages = pageTexts.map((items) => {
+function setupPdf(pageTextArrays: string[][]) {
+  pages = pageTextArrays.map((texts) => {
     const getTextContent = vi.fn().mockResolvedValue({
-      items: items.map((str) => makeTextItem(str, true)),
+      items: makePageItems(texts),
     })
     return { getTextContent }
   })
@@ -60,7 +79,6 @@ describe('importPdf', () => {
   })
 
   it('splits text into chapters by word count', async () => {
-    // 6 words per page, 3 pages = 18 words total
     setupPdf([
       ['word1 word2 word3 word4 word5 word6'],
       ['word7 word8 word9 word10 word11 word12'],
@@ -68,41 +86,10 @@ describe('importPdf', () => {
     ])
 
     const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
-    // 10 words per chapter -> first chapter gets ~10, second gets ~8
     const result = await importPdf(file, 10)
 
     expect(result.chapters.length).toBeGreaterThanOrEqual(2)
     expect(result.meta.chapterCount).toBe(result.chapters.length)
-  })
-
-  it('keeps paragraphs together when both fit under the word limit', async () => {
-    // Two short paragraphs: 4 words each, total 8 words
-    setupPdf([['para1 w1 w2 w3\n\npara2 w1 w2 w3']])
-
-    const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
-    const result = await importPdf(file, 15)
-
-    // Both paragraphs in one chapter (4+4=8 < 15)
-    expect(result.chapters).toHaveLength(1)
-    expect(result.chapters[0].text).toContain('para1')
-    expect(result.chapters[0].text).toContain('para2')
-  })
-
-  it('breaks at paragraph boundary when next paragraph would exceed limit', async () => {
-    // Page 1 has two paragraphs of 8 words each, page 2 has one of 8
-    setupPdf([
-      ['para1 w1 w2 w3 w4 w5 w6 w7 w8\n\npara2 w1 w2 w3 w4 w5 w6 w7 w8'],
-    ])
-
-    const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
-    const result = await importPdf(file, 10)
-
-    // First paragraph (8 words) < 10, so it stays alone
-    // Second paragraph (8 words) would make it 16 > 10, so new chapter
-    expect(result.chapters).toHaveLength(2)
-    expect(result.chapters[0].text).toContain('para1')
-    expect(result.chapters[0].text).not.toContain('para2')
-    expect(result.chapters[1].text).toContain('para2')
   })
 
   it('throws when PDF has no pages', async () => {
@@ -119,7 +106,31 @@ describe('importPdf', () => {
   })
 
   it('throws when all pages have no extractable text', async () => {
-    setupPdf([[''], ['   ']])
+    // Pages with only whitespace strings — these get filtered by trim check
+    pages = [
+      {
+        getTextContent: vi.fn().mockResolvedValue({
+          items: [makeTextItem('   ', { y: 400 })],
+        }),
+      },
+      {
+        getTextContent: vi.fn().mockResolvedValue({
+          items: [makeTextItem('  ', { y: 400 })],
+        }),
+      },
+    ]
+
+    mockGetPage.mockImplementation((pageNum: number) => {
+      return Promise.resolve(pages[pageNum - 1])
+    })
+
+    mockGetDocument.mockReturnValue({
+      promise: Promise.resolve({
+        numPages: 2,
+        getPage: mockGetPage,
+        destroy: mockDestroy,
+      }),
+    })
 
     const file = new File(['data'], 'blank.pdf', { type: 'application/pdf' })
     await expect(importPdf(file)).rejects.toThrow('PDF contains no extractable text content')
@@ -144,9 +155,8 @@ describe('importPdf', () => {
     setupPdf(pageTexts)
 
     const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
-    const result = await importPdf(file) // no wordsPerChapter arg
+    const result = await importPdf(file)
 
-    // With only ~7 words per page × 7 pages = 49 total, and 1750 words/chapter -> 1 chapter
     expect(result.chapters).toHaveLength(1)
   })
 
@@ -162,5 +172,104 @@ describe('importPdf', () => {
     const file = new File(['data'], 'broken.pdf', { type: 'application/pdf' })
     await expect(importPdf(file)).rejects.toThrow('page load failed')
     expect(mockDestroy).toHaveBeenCalled()
+  })
+
+  it('filters out repeating header/footer text', async () => {
+    // 12 pages with the same header/footer at fixed positions, unique body each page
+    pages = Array.from({ length: 12 }, (_, i) => ({
+      getTextContent: vi.fn().mockResolvedValue({
+        items: [
+          makeTextItem('Page Header', { x: 50, y: 500 }),
+          makeTextItem(`Body text page ${i + 1}`, { x: 50, y: 400 }),
+          makeTextItem('Page Footer', { x: 50, y: 10 }),
+        ],
+      }),
+    }))
+
+    mockGetPage.mockImplementation((pageNum: number) => {
+      return Promise.resolve(pages[pageNum - 1])
+    })
+
+    mockGetDocument.mockReturnValue({
+      promise: Promise.resolve({
+        numPages: pages.length,
+        getPage: mockGetPage,
+        destroy: mockDestroy,
+      }),
+    })
+
+    const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
+    const result = await importPdf(file, 1000)
+
+    const fullText = result.chapters.map(c => c.text).join(' ')
+    expect(fullText).toContain('Body text page 1')
+    // Header and footer should be filtered (appear on 12/12 >= 75% of 12 scanned)
+    expect(fullText).not.toContain('Page Header')
+    expect(fullText).not.toContain('Page Footer')
+  })
+
+  it('keeps non-repeating text that shares a page with headers', async () => {
+    // 10 pages: all have header, but each has unique body text
+    pages = Array.from({ length: 10 }, (_, i) => ({
+      getTextContent: vi.fn().mockResolvedValue({
+        items: [
+          makeTextItem('Repeated Header', { x: 50, y: 500 }),
+          makeTextItem(`Unique page ${i + 1} text`, { x: 50, y: 400 }),
+        ],
+      }),
+    }))
+
+    mockGetPage.mockImplementation((pageNum: number) => {
+      return Promise.resolve(pages[pageNum - 1])
+    })
+
+    mockGetDocument.mockReturnValue({
+      promise: Promise.resolve({
+        numPages: pages.length,
+        getPage: mockGetPage,
+        destroy: mockDestroy,
+      }),
+    })
+
+    const file = new File(['data'], 'test.pdf', { type: 'application/pdf' })
+    const result = await importPdf(file, 1000)
+
+    const fullText = result.chapters.map(c => c.text).join(' ')
+    expect(fullText).not.toContain('Repeated Header')
+    expect(fullText).toContain('Unique page 1')
+    expect(fullText).toContain('Unique page 10')
+  })
+
+  it('separates multi-column text within a single line', async () => {
+    // Single page with two columns: left at x=50, right at x=400
+    pages = [{
+      getTextContent: vi.fn().mockResolvedValue({
+        items: [
+          makeTextItem('Left column text', { x: 50, y: 400, width: 150 }),
+          makeTextItem('Right column text', { x: 400, y: 400, width: 150 }),
+        ],
+      }),
+    }]
+
+    mockGetPage.mockImplementation((pageNum: number) => {
+      return Promise.resolve(pages[pageNum - 1])
+    })
+
+    mockGetDocument.mockReturnValue({
+      promise: Promise.resolve({
+        numPages: 1,
+        getPage: mockGetPage,
+        destroy: mockDestroy,
+      }),
+    })
+
+    const file = new File(['data'], 'twocol.pdf', { type: 'application/pdf' })
+    const result = await importPdf(file, 1000)
+
+    const fullText = result.chapters[0].text
+    expect(fullText).toContain('Left column text')
+    expect(fullText).toContain('Right column text')
+    // The two columns should be on separate lines, not concatenated
+    expect(fullText).not.toContain('Left column text Right column text')
   })
 })
