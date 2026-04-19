@@ -24,6 +24,18 @@ Practice typing by retyping classic literature and imported books.
 - **pdfjs-dist** for PDF import
 - **Vitest** + **Testing Library** for tests
 
+## Data Persistence
+
+All data is stored locally in the browser. Nothing is sent to any server.
+
+| Data | Storage | Key / Store |
+|------|---------|-------------|
+| Imported books (metadata + chapter text) | IndexedDB (`narratype-imported`) | `books`, `chapters` object stores |
+| Typing progress (completed pages, last page) | localStorage | `narratype-progress` |
+| Settings (theme, font, cursor, etc.) | localStorage | `narratype-settings` |
+| Typing session state (position, char states) | localStorage | `narratype-session-*` |
+| Cookie consent preference | localStorage | `narratype-consent` |
+
 ## Getting Started
 
 ```bash
