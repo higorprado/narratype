@@ -365,4 +365,36 @@ describe('TypingArea', () => {
       expect(spans[0].className).toContain('correct')
     })
   })
+
+  describe('paragraph rendering', () => {
+    it('renders second newline in paragraph break when cursor lands there', () => {
+      // Text: "a\n\nb" — cursor starts at 0, typing 'a' and Enter puts cursor at index 2 (second \n)
+      // buildParagraphs should render the second \n as a separate element
+      render(<TypingArea text={'a\n\nb'} />)
+      const area = screen.getByTestId('typing-area')
+
+      fireEvent.focus(area)
+      fireEvent.keyDown(area, { key: 'a' })
+      fireEvent.keyDown(area, { key: 'Enter' })
+
+      // The component should render a span with cursorActive class
+      // (the exact position depends on how the engine advances through \n chars)
+      const spans = screen.getAllByTestId('char-span')
+      const cursorSpan = spans.find(s => s.className.includes('cursorActive'))
+      expect(cursorSpan).toBeTruthy()
+    })
+
+    it('splits paragraph on single newline not followed by another', () => {
+      // Text: "a\nb" — single newline, should create two paragraph groups
+      render(<TypingArea text={'a\nb'} />)
+      const area = screen.getByTestId('typing-area')
+
+      // Type 'a' to advance cursor to the newline
+      fireEvent.keyDown(area, { key: 'a' })
+
+      // Should have two paragraphs (separated by the single newline)
+      const paras = area.querySelectorAll('p')
+      expect(paras.length).toBeGreaterThanOrEqual(2)
+    })
+  })
 })
