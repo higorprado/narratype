@@ -12,6 +12,9 @@ import { useSessionPersistence } from '@/hooks/useSessionPersistence'
 import CharSpan from './CharSpan'
 import styles from './TypingArea.module.css'
 
+// Keys that should not consume a pending dead key
+const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'])
+
 /** Maps CursorStyle to the overlay CSS module class. */
 const overlayStyleMap: Record<CursorStyle, string> = {
   BOX: styles.cursorBox,
@@ -140,13 +143,22 @@ export default function TypingArea({
 
       // If a dead key was pending, try to compose
       if (deadKeyRef.current !== null) {
+        // Modifier keys don't consume the dead key (user may be pressing Shift
+        // for an uppercase accented letter, e.g., Dead acute → Shift → E → É)
+        if (MODIFIER_KEYS.has(e.key)) return
+
         const deadChar = deadKeyRef.current
         deadKeyRef.current = null
+
         // Space after dead key → produce the standalone dead character
         if (e.key === ' ') {
           handleKeyPress(deadChar)
           return
         }
+
+        // Backspace after dead key → cancel without deleting
+        if (e.key === 'Backspace') return
+
         // Try composition: dead key + base letter → accented character
         const composed = compose(deadChar, e.key)
         if (composed) {

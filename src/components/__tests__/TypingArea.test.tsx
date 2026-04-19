@@ -307,4 +307,62 @@ describe('TypingArea', () => {
       expect(spans[0].className).toContain('correct')
     })
   })
+
+  describe('dead key edge cases', () => {
+    it('preserves dead key across Shift press for uppercase accent', () => {
+      render(<TypingArea text="É" />)
+      const area = screen.getByTestId('typing-area')
+
+      // Dead key (acute), then Shift, then E
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Quote' })
+      fireEvent.keyDown(area, { key: 'Shift' })
+      fireEvent.keyDown(area, { key: 'E', shiftKey: true })
+
+      const spans = screen.getAllByTestId('char-span')
+      expect(spans[0].className).toContain('correct')
+    })
+
+    it('cancels dead key on Backspace without deleting previous char', () => {
+      render(<TypingArea text="ab" />)
+      const area = screen.getByTestId('typing-area')
+
+      // Type 'a', then dead key, then Backspace
+      fireEvent.keyDown(area, { key: 'a' })
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Quote' })
+      fireEvent.keyDown(area, { key: 'Backspace' })
+
+      const spans = screen.getAllByTestId('char-span')
+      expect(spans[0].className).toContain('correct') // 'a' still correct
+      expect(spans[1].className).toContain('untyped') // 'b' still untyped
+    })
+
+    it('preserves dead key across Ctrl press', () => {
+      render(<TypingArea text="á" />)
+      const area = screen.getByTestId('typing-area')
+
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Quote' })
+      fireEvent.keyDown(area, { key: 'Control' })
+      fireEvent.keyDown(area, { key: 'a' })
+
+      const spans = screen.getAllByTestId('char-span')
+      expect(spans[0].className).toContain('correct')
+    })
+
+    it('overwrites dead key when another dead key is pressed', () => {
+      render(<TypingArea text="á" />)
+      const area = screen.getByTestId('typing-area')
+
+      // First dead key: tilde (Shift+Backquote)
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Backquote', shiftKey: true })
+      // Second dead key: acute (Quote)
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Quote' })
+      // Compose with 'a' — should use acute (second dead key), not tilde
+      fireEvent.keyDown(area, { key: 'a' })
+
+      const spans = screen.getAllByTestId('char-span')
+      // \u00e1 = á (acute), not ã (tilde)
+      expect(spans[0].textContent).toBe('á')
+      expect(spans[0].className).toContain('correct')
+    })
+  })
 })
