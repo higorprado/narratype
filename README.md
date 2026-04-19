@@ -26,7 +26,9 @@ Practice typing by retyping classic literature and imported books.
 
 ## Data Persistence
 
-All data is stored locally in the browser. Nothing is sent to any server.
+All data is stored locally in the browser. No data is collected by this application.
+If ads are enabled and the user grants consent, Google AdSense loads its own
+scripts and may send data to Google's servers per its privacy policy.
 
 | Data | Storage | Key / Store |
 |------|---------|-------------|
