@@ -9,7 +9,6 @@ export interface TypingEngineOptions {
   stopCursorAfterMistype?: boolean
   ignoreCapitalization?: boolean
   skipPunctuation?: boolean
-  internationalMode?: boolean
 }
 
 export interface TypingEngineRestore {
@@ -114,31 +113,9 @@ function createReducer(optionsRef: React.RefObject<TypingEngineOptions>) {
         const expectedChar = state.chars[cursor].char
         const newChars = [...state.chars]
 
-        // International mode: single dash matches em-dash
-        if (options.internationalMode && typedChar === '-' && expectedChar === '\u2014') {
-          newChars[cursor] = { ...newChars[cursor], state: CharState.CORRECT }
-          let newPos = cursor + 1
-
-          // Skip punctuation if enabled
-          if (options.skipPunctuation) {
-            while (newPos < newChars.length && PUNCTUATION.has(newChars[newPos].char)) {
-              newChars[newPos] = { ...newChars[newPos], state: CharState.SKIPPED }
-              newPos++
-            }
-          }
-
-          return {
-            ...state,
-            chars: newChars,
-            cursorPosition: newPos,
-            startTime,
-            isComplete: newPos >= state.chars.length,
-          }
-        }
 
         const charResult = compareChars(typedChar, expectedChar, {
           ignoreCapitalization: options.ignoreCapitalization,
-          internationalMode: options.internationalMode,
         })
 
         // Stop cursor after mistype: mark incorrect but don't advance

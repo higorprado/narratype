@@ -72,7 +72,7 @@ When the typing area loses focus:
 ## Settings
 
 - React context (`SettingsContext`) with localStorage persistence.
-- Key settings: `cursorStyle`, `stopCursorAfterMistype`, `ignoreCapitalization`, `skipPunctuation`, `internationalMode`, `wordsPerPage`, `inactivityTimeout`, `autoAdvancePage`, `statsUpdateFrequency`, `hideUI`, `readingMode`, `smoothCursor`, `autoScroll`, `showLiteralMistypes`, `theme`, `font`.
+- Key settings: `cursorStyle`, `stopCursorAfterMistype`, `ignoreCapitalization`, `skipPunctuation`, `wordsPerPage`, `inactivityTimeout`, `autoAdvancePage`, `statsUpdateFrequency`, `hideUI`, `readingMode`, `smoothCursor`, `autoScroll`, `showLiteralMistypes`, `theme`, `font`.
 
 ## Progress Tracking
 

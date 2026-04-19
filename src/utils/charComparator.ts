@@ -2,7 +2,6 @@ import { CharState } from '@/types'
 
 export interface CompareOptions {
   ignoreCapitalization?: boolean
-  internationalMode?: boolean
   skipPunctuation?: boolean
 }
 
@@ -32,13 +31,6 @@ export function compareChars(
   expected: string,
   options: CompareOptions = {},
 ): CharState {
-  // International mode: em-dash handling
-  if (options.internationalMode && expected === '\u2014' && typed === '-') {
-    // First dash of a double-dash sequence — caller handles the two-char mapping.
-    // For now, treat individual '-' against em-dash as incorrect
-    // (the typing engine handles the '--' -> em-dash conversion)
-  }
-
   // Direct match
   if (typed === expected) return CharState.CORRECT
 

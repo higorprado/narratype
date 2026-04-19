@@ -55,7 +55,7 @@ src/
 | `src/utils/textSplitter.ts` | Splits chapter text into pages by word count. |
 | `src/utils/stats.ts` | WPM and accuracy calculations. |
 | `src/utils/textNormalizer.ts` | Text normalization for built-in books. |
-| `src/utils/charComparator.ts` | Character comparison (case-insensitive, international mode). |
+| `src/utils/charComparator.ts` | Character comparison (case-insensitive, quote equivalence). |
 | `src/utils/pdfImporter.ts` | PDF file parsing using pdfjs-dist. Extracts text, splits into chapters by word count. |
 | `src/utils/epubImporter.ts` | EPUB file parsing using @lingo-reader/epub-parser. |
 | `src/utils/slugify.ts` | Shared URL-safe slug generation from title + author. |

@@ -317,26 +317,6 @@ describe('useTypingEngine', () => {
     expect(result.current.chars[4].state).toBe(CharState.CORRECT)
   })
 
-  describe('internationalMode option', () => {
-    it('should treat double dash as em-dash', () => {
-      const text = 'word\u2014word'
-      const { result } = renderHook(() =>
-        useTypingEngine(text, { internationalMode: true }),
-      )
-
-      act(() => {
-        result.current.handleKeyPress('w')
-        result.current.handleKeyPress('o')
-        result.current.handleKeyPress('r')
-        result.current.handleKeyPress('d')
-        result.current.handleKeyPress('-') // first dash
-      })
-
-      // After first dash, em-dash should be completed
-      expect(result.current.chars[4].state).toBe(CharState.CORRECT)
-      expect(result.current.cursorPosition).toBe(5) // past the em-dash
-    })
-  })
 
   describe('RESTORE action', () => {
     it('should restore from saved session', async () => {

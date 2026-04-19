@@ -37,12 +37,6 @@ describe('compareChars', () => {
     })
   })
 
-  describe('internationalMode', () => {
-    it('should convert double hyphen to em-dash', () => {
-      // When user types '--' and expected is em-dash
-      expect(compareChars('\u2014', '\u2014', { internationalMode: true })).toBe(CharState.CORRECT)
-    })
-  })
 
   describe('skipPunctuation', () => {
     it('should mark punctuation as CORRECT when enabled and typed char matches', () => {

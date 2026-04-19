@@ -49,7 +49,6 @@ export interface Settings {
   cursorStyle: CursorStyle
   smoothCursor: boolean
   readingMode: boolean
-  internationalMode: boolean
   ignoreCapitalization: boolean
   skipPunctuation: boolean
   stopCursorAfterMistype: boolean
@@ -71,7 +70,6 @@ export const DEFAULT_SETTINGS: Settings = {
   cursorStyle: 'BOX',
   smoothCursor: true,
   readingMode: false,
-  internationalMode: false,
   ignoreCapitalization: false,
   skipPunctuation: false,
   stopCursorAfterMistype: false,

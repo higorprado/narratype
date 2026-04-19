@@ -61,7 +61,6 @@ const FONT_FAMILIES: Record<FontName, string> = {
 const BOOLEAN_KEYS: { key: keyof Settings; label: string }[] = [
   { key: 'smoothCursor', label: 'Smooth Cursor' },
   { key: 'readingMode', label: 'Reading Mode' },
-  { key: 'internationalMode', label: 'International Mode' },
   { key: 'ignoreCapitalization', label: 'Ignore Capitalization' },
   { key: 'skipPunctuation', label: 'Skip Punctuation' },
   { key: 'stopCursorAfterMistype', label: 'Stop Cursor After Mistype' },

@@ -168,7 +168,6 @@ export default function TypingConsolePage() {
               stopCursorAfterMistype: settings.stopCursorAfterMistype,
               ignoreCapitalization: settings.ignoreCapitalization,
               skipPunctuation: settings.skipPunctuation,
-              internationalMode: settings.internationalMode,
             }}
             cursorStyle={settings.cursorStyle}
             autoScroll={settings.autoScroll}
