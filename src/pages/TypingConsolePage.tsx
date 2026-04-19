@@ -304,6 +304,7 @@ export default function TypingConsolePage() {
                   }
                   setStats(null)
                   setIsCompleted(false)
+                  setIsInactive(false)
                   setSavedSession(null)
                   setShowRestartConfirm(false)
                   setRestartKey((k) => k + 1)

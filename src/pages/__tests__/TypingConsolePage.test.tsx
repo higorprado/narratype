@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { SettingsProvider } from '@/context/SettingsContext'
@@ -148,5 +148,28 @@ describe('TypingConsolePage', () => {
     expect(
       screen.queryByText('Restart this chapter from the beginning?'),
     ).not.toBeInTheDocument()
+  })
+
+  it('dismisses pause overlay after restart', async () => {
+    const { user } = renderWithRoute('/typing-console/the-call-of-cthulhu/0/0')
+
+    // Type a character to start, then blur to trigger pause
+    const area = screen.getByTestId('typing-area')
+    fireEvent.focus(area)
+    fireEvent.keyDown(area, { key: 'T' })
+    fireEvent.blur(area)
+
+    // Pause overlay should be visible
+    expect(screen.getByText('Paused')).toBeInTheDocument()
+
+    // Click Restart, then confirm in the dialog
+    const restartButtons = screen.getAllByRole('button', { name: /restart/i })
+    await user.click(restartButtons[0])
+    // After dialog opens, there are multiple Restart buttons; pick the last one (dialog's)
+    const allRestartButtons = screen.getAllByRole('button', { name: /restart/i })
+    await user.click(allRestartButtons[allRestartButtons.length - 1])
+
+    // Pause overlay should be gone after restart
+    expect(screen.queryByText('Paused')).not.toBeInTheDocument()
   })
 })
