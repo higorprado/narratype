@@ -239,4 +239,72 @@ describe('TypingArea', () => {
     expect(onStatsUpdate).toHaveBeenCalledTimes(1)
   })
 
+
+  describe('dead key composition', () => {
+    it('composes acute + a to \u00e1', () => {
+      render(<TypingArea text="\u00e1" />)
+      const area = screen.getByTestId('typing-area')
+
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Quote' })
+      fireEvent.keyDown(area, { key: 'a' })
+
+      const spans = screen.getAllByTestId('char-span')
+      expect(spans[0].className).toContain('correct')
+    })
+
+    it('composes acute + c to \u00e7', () => {
+      render(<TypingArea text="\u00e7" />)
+      const area = screen.getByTestId('typing-area')
+
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Quote' })
+      fireEvent.keyDown(area, { key: 'c' })
+
+      const spans = screen.getAllByTestId('char-span')
+      expect(spans[0].className).toContain('correct')
+    })
+
+    it('composes tilde + a to \u00e3', () => {
+      render(<TypingArea text="\u00e3" />)
+      const area = screen.getByTestId('typing-area')
+
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Backquote', shiftKey: true })
+      fireEvent.keyDown(area, { key: 'a' })
+
+      const spans = screen.getAllByTestId('char-span')
+      expect(spans[0].className).toContain('correct')
+    })
+
+    it('composes circumflex + e to \u00ea', () => {
+      render(<TypingArea text="\u00ea" />)
+      const area = screen.getByTestId('typing-area')
+
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Digit6', shiftKey: true })
+      fireEvent.keyDown(area, { key: 'e' })
+
+      const spans = screen.getAllByTestId('char-span')
+      expect(spans[0].className).toContain('correct')
+    })
+
+    it('falls through when composition not found', () => {
+      render(<TypingArea text="x" />)
+      const area = screen.getByTestId('typing-area')
+
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Quote' })
+      fireEvent.keyDown(area, { key: 'x' })
+
+      const spans = screen.getAllByTestId('char-span')
+      expect(spans[0].className).toContain('correct')
+    })
+
+    it('composes uppercase acute + E to \u00c9', () => {
+      render(<TypingArea text="\u00c9" />)
+      const area = screen.getByTestId('typing-area')
+
+      fireEvent.keyDown(area, { key: 'Dead', code: 'Quote' })
+      fireEvent.keyDown(area, { key: 'E', shiftKey: true })
+
+      const spans = screen.getAllByTestId('char-span')
+      expect(spans[0].className).toContain('correct')
+    })
+  })
 })

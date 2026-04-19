@@ -5,6 +5,7 @@ import { useStatsAccumulator } from '@/hooks/useStatsAccumulator'
 import { CharState } from '@/types'
 import type { TypingStats, CursorStyle, StatsUpdateFrequency } from '@/types'
 import { calculateWPM } from '@/utils/stats'
+import { resolveDeadChar, compose } from '@/utils/deadKeyComposition'
 import { useCursorOverlay } from '@/hooks/useCursorOverlay'
 import { useInactivityDetector } from '@/hooks/useInactivityDetector'
 import { useSessionPersistence } from '@/hooks/useSessionPersistence'
@@ -117,20 +118,10 @@ export default function TypingArea({
     onResume: () => onActivity?.(),
   })
 
-  // Dead key tracking: on international keyboards (ABNT2, US-Intl, etc.), pressing
-  // ' or " may send key='Dead'. We store the produced character (accounting
-  // for Shift), then when the user presses space we emit it.
+  // Dead key tracking: on international keyboards (ABNT2, US-Intl, etc.),
+  // accent keys send e.key='Dead'. We store the resolved dead character,
+  // then compose it with the next key press.
   const deadKeyRef = useRef<string | null>(null)
-
-  // Map physical key codes + shift state to the character the dead key produces.
-  // e.g. Quote without Shift → ', Quote with Shift → ".
-  const getDeadKeyChar = (code: string, shift: boolean): string | null => {
-    switch (code) {
-      case 'Quote': return shift ? '"' : "'"
-      case 'Backquote': return '`'
-      default: return null
-    }
-  }
 
   // Capture keyboard input (disabled in reading mode)
   const handleKeyDown = useCallback(
@@ -140,24 +131,29 @@ export default function TypingArea({
         e.preventDefault()
       }
 
-      // Handle dead key: store the produced char and wait for next key
+      // Handle dead key: store the resolved dead char and wait for next key
       if (e.key === 'Dead') {
-        const ch = getDeadKeyChar(e.code, e.shiftKey)
+        const ch = resolveDeadChar(e.code, e.shiftKey)
         if (ch) deadKeyRef.current = ch
         return
       }
 
-      // If a dead key was pending, check if this completes it
+      // If a dead key was pending, try to compose
       if (deadKeyRef.current !== null) {
-        const base = deadKeyRef.current
+        const deadChar = deadKeyRef.current
         deadKeyRef.current = null
         // Space after dead key → produce the standalone dead character
         if (e.key === ' ') {
-          handleKeyPress(base)
+          handleKeyPress(deadChar)
           return
         }
-        // Any other key: the OS composes them, but keydown still fires with the
-        // raw key. Let it fall through to normal processing.
+        // Try composition: dead key + base letter → accented character
+        const composed = compose(deadChar, e.key)
+        if (composed) {
+          handleKeyPress(composed)
+          return
+        }
+        // Dead key didn't compose with this base letter — fall through
       }
 
       handleKeyPress(e.key)
